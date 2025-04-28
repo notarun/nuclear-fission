@@ -4,8 +4,7 @@ local lume = require '3rd.lume.lume'
 local Color = require 'color'
 local input = require 'input'
 
-local lg, lm = love.graphics, love.mouse
-local world = bump.newWorld()
+local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
 
 local function MenuTitle(title)
   assert(type(title) == "string", "Invalid string `title`")
@@ -46,17 +45,12 @@ local function MenuButton(title, fn)
   this.x, this.y = (screenW - this.w) / 2, (screenH - this.h) / 2
   local txtX, txtY = this.x + (this.w - txtW) / 2, this.y + (this.h - txtH) / 2
 
-  world:add(this, this.x, this.y, this.w, this.h)
+  wrld:add(this, this.x, this.y, this.w, this.h)
 
   local function update()
-    hovering = false
     local x, y = lm.getPosition()
-    local items = world:queryPoint(x, y)
-
-    for _, e in ipairs(items) do
-      if e == this then hovering = true end
-    end
-
+    local items = wrld:queryPoint(x, y)
+    hovering = lume.find(items, this) ~= nil
     if hovering and input:pressed('click') then fn() end
   end
 
@@ -68,7 +62,7 @@ local function MenuButton(title, fn)
     lg.draw(text, txtX, txtY)
   end
 
-  return { props = this, update = update, draw = draw }
+  return { update = update, draw = draw }
 end
 
 local function MenuScene(goToGame)
