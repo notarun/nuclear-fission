@@ -32,8 +32,6 @@ local function Actions(s)
     else
       s.playing = nextIdx
     end
-
-    print(s.playing, nextIdx)
   end
 
   return {

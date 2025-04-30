@@ -2,6 +2,8 @@ local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
 local Color = require("color")
+local GameScene = require("game")
+local Scene = require("scene")
 local input = require("input")
 
 local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
@@ -65,25 +67,9 @@ local function MenuButton(title, fn)
   return { update = update, draw = draw }
 end
 
-local function MenuScene(goToGame)
-  local entities = {
+return function(goToGame)
+  return Scene({
     MenuTitle("nuclear fission"),
     MenuButton("play", goToGame),
-  }
-
-  local function update(dt)
-    for _, b in ipairs(entities) do
-      if b.update then b.update(dt) end
-    end
-  end
-
-  local function draw()
-    for _, b in ipairs(entities) do
-      if b.draw then b.draw() end
-    end
-  end
-
-  return { update = update, draw = draw }
+  })
 end
-
-return MenuScene

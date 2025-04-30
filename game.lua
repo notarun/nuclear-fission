@@ -2,6 +2,7 @@ local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
 local Color = require("color")
+local Scene = require("scene")
 local input = require("input")
 local useStore = require("store")
 
@@ -151,25 +152,9 @@ local function Grid(x, y, opts)
   return { update = update, draw = draw }
 end
 
-local function GameScene()
-  local entities = {
+return function()
+  return Scene({
     Statistics(0, 0, { width = 80 }),
     Grid(80, 0),
-  }
-
-  local function update(dt)
-    for _, b in ipairs(entities) do
-      if b.update then b.update(dt) end
-    end
-  end
-
-  local function draw()
-    for _, b in ipairs(entities) do
-      if b.draw then b.draw() end
-    end
-  end
-
-  return { update = update, draw = draw }
+  })
 end
-
-return GameScene
