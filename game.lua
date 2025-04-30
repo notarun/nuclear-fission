@@ -7,6 +7,31 @@ local useStore = require("store")
 
 local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
 
+local function Statistics(x, y, opts)
+  assert(type(opts.width) == "number", "Invalid param `opts.width`")
+
+  local state = useStore()
+
+  local function draw()
+    local h = lg.getHeight()
+
+    lg.setColor(Color.BrightGray)
+    lg.rectangle("line", x, y, opts.width, h)
+
+    for i, p in ipairs(state.players) do
+      lg.setColor(p.color)
+
+      local mode = i == state.playing and "fill" or "line"
+      lg.rectangle(mode, x, y + ((i - 1) * h / 2), opts.width, h / 2)
+
+      lg.setColor(Color.White)
+      lg.print(p.name, x, y + ((i - 1) * h / 2))
+    end
+  end
+
+  return { draw = draw }
+end
+
 local function Nuclei(x, y, opts)
   assert(opts.color, "Invalid param `opts.color`")
   assert(type(opts.count) == "number", "Invalid param `opts.count`")
@@ -44,8 +69,6 @@ local function GridCell(x, y, opts)
   assert(type(opts.i) == "number", "Invalid number `opts.i`")
   assert(type(opts.j) == "number", "Invalid number `opts.j`")
 
-  opts.size = opts.size or 80
-
   local hovering = false
   local state, actions = useStore()
   local this = { x = x, y = y, h = opts.size, w = opts.size }
@@ -65,6 +88,7 @@ local function GridCell(x, y, opts)
 
       if nucleiCount < threshold then
         actions.updateCell(opts.i, opts.j, nucleiCount + 1)
+        actions.nextPlayer()
       else
         print("FIXME: IMPLEMENT SPLITTING")
       end
@@ -72,12 +96,13 @@ local function GridCell(x, y, opts)
   end
 
   local function draw()
-    lg.setColor(hovering and Color.ElectricPurple or Color.White)
+    lg.setColor(hovering and state.players[state.playing].color or Color.White)
     lg.rectangle("line", this.x, this.y, this.w, this.h)
 
+    -- FIXME: this will cause performance issue
     Nuclei(x, y, {
       count = state.matrix[opts.i][opts.j],
-      color = Color.ElectricPurple,
+      color = state.players[state.playing].color,
       gridSz = opts.size,
     }).draw()
   end
@@ -89,7 +114,7 @@ local function Grid(x, y, opts)
   x, y, opts = x or 0, y or 0, opts or {}
   opts.rows = opts.rows or 12
   opts.cols = opts.cols or 6
-  opts.cellSize = opts.cellSize or 80
+  opts.cellSize = opts.cellSize or 66.6
 
   local state, actions = useStore()
   actions.createMatrix(opts.rows, opts.cols)
@@ -128,7 +153,8 @@ end
 
 local function GameScene()
   local entities = {
-    Grid(0, 0),
+    Statistics(0, 0, { width = 80 }),
+    Grid(80, 0),
   }
 
   local function update(dt)
