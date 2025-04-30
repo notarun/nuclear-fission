@@ -1,7 +1,7 @@
-local baton = require "3rd.baton.baton"
+local baton = require("3rd.baton.baton")
 
 return baton.new({
   controls = {
-    click = {"mouse:1"}
-  }
+    click = { "mouse:1" },
+  },
 })

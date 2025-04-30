@@ -8,7 +8,7 @@ setmetatable(Color, {
       tonumber(string.sub(hexcode, 6, 7), 16) / 256,
       opacity,
     }
-  end
+  end,
 })
 
 Color.White = Color("#FFFFFF")

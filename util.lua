@@ -12,5 +12,5 @@ return {
     end
 
     return matrix
-  end
+  end,
 }

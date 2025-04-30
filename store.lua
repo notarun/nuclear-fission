@@ -1,6 +1,4 @@
-local lume = require '3rd.lume.lume'
-
-local util = require 'util'
+local util = require("util")
 
 local function State()
   return {
@@ -9,25 +7,20 @@ local function State()
 end
 
 local function Actions(s)
-  local function dumpState() require('dump')(s) end
+  local function dumpState()
+    require("dump")(s)
+  end
 
   local function createMatrix(row, col)
     s.matrix = util.createMatrix(row, col, 0)
   end
 
-  local function updateCell(index, val)
-    local t = lume.split(index, ":")
-    s.matrix[tonumber(t[1])][tonumber(t[2])] = val
-  end
-
-  local function getCell(index)
-    local t = lume.split(index, ":")
-    return s.matrix[tonumber(t[1])][tonumber(t[2])]
+  local function updateCell(i, j, val)
+    s.matrix[i][j] = val
   end
 
   return {
     dumpState = dumpState,
-    getCell = getCell,
     createMatrix = createMatrix,
     updateCell = updateCell,
   }

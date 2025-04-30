@@ -1,8 +1,8 @@
-local bump = require '3rd.bump.bump'
-local lume = require '3rd.lume.lume'
+local bump = require("3rd.bump.bump")
+local lume = require("3rd.lume.lume")
 
-local Color = require 'color'
-local input = require 'input'
+local Color = require("color")
+local input = require("input")
 
 local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
 
@@ -51,7 +51,9 @@ local function MenuButton(title, fn)
     local x, y = lm.getPosition()
     local items = wrld:queryPoint(x, y)
     hovering = lume.find(items, this) ~= nil
-    if hovering and input:pressed('click') then fn() end
+    if hovering and input:pressed("click") then
+      fn()
+    end
   end
 
   local function draw()
@@ -73,13 +75,17 @@ local function MenuScene(goToGame)
 
   local function update(dt)
     for _, b in ipairs(entities) do
-      if b.update then b.update(dt) end
+      if b.update then
+        b.update(dt)
+      end
     end
   end
 
   local function draw()
     for _, b in ipairs(entities) do
-      if b.draw then b.draw() end
+      if b.draw then
+        b.draw()
+      end
     end
   end
 
