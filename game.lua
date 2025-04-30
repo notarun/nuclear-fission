@@ -1,8 +1,8 @@
-local lume = require("3rd.lume.lume")
 local bump = require("3rd.bump.bump")
+local lume = require("3rd.lume.lume")
 
-local input = require("input")
 local Color = require("color")
+local input = require("input")
 local useStore = require("store")
 
 local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
@@ -133,17 +133,13 @@ local function GameScene()
 
   local function update(dt)
     for _, b in ipairs(entities) do
-      if b.update then
-        b.update(dt)
-      end
+      if b.update then b.update(dt) end
     end
   end
 
   local function draw()
     for _, b in ipairs(entities) do
-      if b.draw then
-        b.draw()
-      end
+      if b.draw then b.draw() end
     end
   end
 
