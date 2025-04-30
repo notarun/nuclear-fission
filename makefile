@@ -6,3 +6,4 @@ out/nuclear-fission.love: $(LUA_FILES)
 
 .PHONY: fmt
 fmt:
+	stylua .
