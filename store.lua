@@ -6,7 +6,7 @@ local function State()
     matrix = util.createMatrix(12, 6, 0),
     players = {
       { name = "Player 1", color = Color.ElectricPurple },
-      { name = "Player 2", color = Color.VividSkyBlue },
+      { name = "Player 2", color = Color.CookiesAndCream },
     },
     playing = 1,
   }

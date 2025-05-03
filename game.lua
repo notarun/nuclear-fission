@@ -5,33 +5,9 @@ local Color = require("color")
 local Scene = require("scene")
 local input = require("input")
 local useStore = require("store")
+local util = require("util")
 
 local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
-
-local function Statistics(x, y, opts)
-  assert(type(opts.width) == "number", "Invalid param `opts.width`")
-
-  local state = useStore()
-
-  local function draw()
-    local h = lg.getHeight()
-
-    lg.setColor(Color.BrightGray)
-    lg.rectangle("line", x, y, opts.width, h)
-
-    for i, p in ipairs(state.players) do
-      lg.setColor(p.color)
-
-      local mode = i == state.playing and "fill" or "line"
-      lg.rectangle(mode, x, y + ((i - 1) * h / 2), opts.width, h / 2)
-
-      lg.setColor(Color.White)
-      lg.print(p.name, x, y + ((i - 1) * h / 2))
-    end
-  end
-
-  return { draw = draw }
-end
 
 local function Nuclei(x, y, opts)
   assert(opts.color, "Invalid param `opts.color`")
@@ -48,6 +24,12 @@ local function Nuclei(x, y, opts)
 
   wrld:add(this, this.x, this.y, this.w, this.h)
 
+  local function set(options)
+    for k in pairs(options) do
+      opts[k] = options[k]
+    end
+  end
+
   local function draw()
     lg.setColor(opts.color)
 
@@ -63,49 +45,69 @@ local function Nuclei(x, y, opts)
     end
   end
 
-  return { draw = draw }
+  return { draw = draw, set = set }
 end
 
 local function GridCell(x, y, opts)
   assert(type(opts.i) == "number", "Invalid number `opts.i`")
   assert(type(opts.j) == "number", "Invalid number `opts.j`")
 
-  local hovering = false
+  local owner
   local state, actions = useStore()
   local this = { x = x, y = y, h = opts.size, w = opts.size }
+  local nuclei = Nuclei(this.x, this.y, {
+    count = state.matrix[opts.i][opts.j],
+    color = Color.White,
+    gridSz = opts.size,
+  })
+
+  local threshold = #util.vonNeumannNeighborIndices(
+    state.matrix,
+    opts.i,
+    opts.j
+  ) - 1
 
   wrld:add(this, this.x, this.y, this.w, this.h)
 
   local function update()
     local mX, mY = lm.getPosition()
     local items = wrld:queryPoint(mX, mY)
-    hovering = lume.find(items, this) ~= nil
+    local hovering = lume.find(items, this) ~= nil
 
     if hovering and input:pressed("click") then
       local nucleiCount = state.matrix[opts.i][opts.j]
 
-      -- FIXME: change according to the location of the cell
-      local threshold = 3
+      if nucleiCount == 0 and not owner then owner = state.playing end
+      if owner ~= state.playing then return end
 
       if nucleiCount < threshold then
-        actions.updateCell(opts.i, opts.j, nucleiCount + 1)
+        local count = nucleiCount + 1
+        local color = state.players[state.playing].color
+
+        actions.updateCell(opts.i, opts.j, count)
+        nuclei.set({ color = color, count = count })
         actions.nextPlayer()
       else
-        print("FIXME: IMPLEMENT SPLITTING")
+        actions.updateCell(opts.i, opts.j, 0)
+        nuclei.set({ count = 0 })
+
+        local neighbors = util.vonNeumannNeighborIndices(state.matrix, opts.i, opts.j)
+        for _, n in ipairs(neighbors) do
+          local cellVal = state.matrix[n.i][n.j]
+          actions.updateCell(n.i, n.j, cellVal + 1)
+        end
+
+        actions.nextPlayer()
+
+        --- XXX: Look into posibility of using physics world instead
       end
     end
   end
 
   local function draw()
-    lg.setColor(hovering and state.players[state.playing].color or Color.White)
+    lg.setColor(state.players[state.playing].color)
     lg.rectangle("line", this.x, this.y, this.w, this.h)
-
-    -- FIXME: this will cause performance issue
-    Nuclei(x, y, {
-      count = state.matrix[opts.i][opts.j],
-      color = state.players[state.playing].color,
-      gridSz = opts.size,
-    }).draw()
+    nuclei.draw()
   end
 
   return { update = update, draw = draw }
@@ -115,7 +117,10 @@ local function Grid(x, y, opts)
   x, y, opts = x or 0, y or 0, opts or {}
   opts.rows = opts.rows or 12
   opts.cols = opts.cols or 6
-  opts.cellSize = opts.cellSize or 66.6
+  opts.cellSize = opts.cellSize or 60
+
+  local w, h = opts.cellSize * opts.cols, opts.cellSize * opts.rows
+  local pl, ph = (lg.getWidth() - w) / 2, (lg.getHeight() - h) / 2
 
   local state, actions = useStore()
   actions.createMatrix(opts.rows, opts.cols)
@@ -123,8 +128,8 @@ local function Grid(x, y, opts)
   local cells = {}
   for i, cols in ipairs(state.matrix) do
     for j, value in ipairs(cols) do
-      local cellX = x + (j - 1) * opts.cellSize
-      local cellY = y + (i - 1) * opts.cellSize
+      local cellX = x + pl + (j - 1) * opts.cellSize
+      local cellY = y + ph + (i - 1) * opts.cellSize
       table.insert(
         cells,
         GridCell(cellX, cellY, {
@@ -153,8 +158,5 @@ local function Grid(x, y, opts)
 end
 
 return function()
-  return Scene({
-    Statistics(0, 0, { width = 80 }),
-    Grid(80, 0),
-  })
+  return Scene({ Grid(0, 0) })
 end

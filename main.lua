@@ -6,9 +6,10 @@ local input = require("input")
 local scene
 
 function love.load()
-  scene = MenuScene(function()
-    scene = GameScene()
-  end)
+  -- scene = MenuScene(function()
+  --   scene = GameScene()
+  -- end)
+  scene = GameScene()
 end
 
 function love.update(dt)

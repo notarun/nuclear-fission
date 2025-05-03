@@ -2,7 +2,6 @@ local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
 local Color = require("color")
-local GameScene = require("game")
 local Scene = require("scene")
 local input = require("input")
 
