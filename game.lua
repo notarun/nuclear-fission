@@ -10,9 +10,11 @@ local util = require("util")
 local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
 
 local function Nuclei(x, y, opts)
-  assert(opts.color, "Invalid param `opts.color`")
-  assert(type(opts.count) == "number", "Invalid param `opts.count`")
+  assert(opts.i, "Invalid param `opts.i`")
+  assert(opts.j, "Invalid param `opts.j`")
   assert(type(opts.gridSz) == "number", "Invalid param `opts.gridSz`")
+
+  local state = useStore()
 
   local size = 12
   local this = {
@@ -22,50 +24,39 @@ local function Nuclei(x, y, opts)
     w = size,
   }
 
-  wrld:add(this, this.x, this.y, this.w, this.h)
-
-  local function set(options)
-    for k in pairs(options) do
-      opts[k] = options[k]
-    end
-  end
-
   local function draw()
-    lg.setColor(opts.color)
+    local cell = state.matrix[opts.i][opts.j]
 
-    if opts.count == 1 then
+    if cell.owner then
+      lg.setColor(state.players[cell.owner].color)
+    end
+
+    if cell.value == 1 then
       lg.circle("line", this.x, this.y, size)
-    elseif opts.count == 2 then
+    elseif cell.value == 2 then
       lg.circle("line", this.x - 10, this.y, size)
       lg.circle("line", this.x + 10, this.y, size)
-    elseif opts.count == 3 then
+    elseif cell.value == 3 then
       lg.circle("line", this.x - 10, this.y, size)
       lg.circle("line", this.x + 10, this.y, size)
       lg.circle("line", this.x, this.y + 10, size)
     end
   end
 
-  return { draw = draw, set = set }
+  return { draw = draw }
 end
 
 local function GridCell(x, y, opts)
   assert(type(opts.i) == "number", "Invalid number `opts.i`")
   assert(type(opts.j) == "number", "Invalid number `opts.j`")
 
-  local owner
   local state, actions = useStore()
   local this = { x = x, y = y, h = opts.size, w = opts.size }
   local nuclei = Nuclei(this.x, this.y, {
-    count = state.matrix[opts.i][opts.j],
-    color = Color.White,
+    i = opts.i,
+    j = opts.j,
     gridSz = opts.size,
   })
-
-  local threshold = #util.vonNeumannNeighborIndices(
-    state.matrix,
-    opts.i,
-    opts.j
-  ) - 1
 
   wrld:add(this, this.x, this.y, this.w, this.h)
 
@@ -75,31 +66,12 @@ local function GridCell(x, y, opts)
     local hovering = lume.find(items, this) ~= nil
 
     if hovering and input:pressed("click") then
-      local nucleiCount = state.matrix[opts.i][opts.j]
-
-      if nucleiCount == 0 and not owner then owner = state.playing end
-      if owner ~= state.playing then return end
-
-      if nucleiCount < threshold then
-        local count = nucleiCount + 1
-        local color = state.players[state.playing].color
-
-        actions.updateCell(opts.i, opts.j, count)
-        nuclei.set({ color = color, count = count })
-        actions.nextPlayer()
+      local owner = state.matrix[opts.i][opts.j].owner
+      if owner and owner ~= state.playing then
+        print("THIS CELL IS OWNED BY OTHER PLAYER")
       else
-        actions.updateCell(opts.i, opts.j, 0)
-        nuclei.set({ count = 0 })
-
-        local neighbors = util.vonNeumannNeighborIndices(state.matrix, opts.i, opts.j)
-        for _, n in ipairs(neighbors) do
-          local cellVal = state.matrix[n.i][n.j]
-          actions.updateCell(n.i, n.j, cellVal + 1)
-        end
-
+        actions.fuse(opts.i, opts.j, state.playing)
         actions.nextPlayer()
-
-        --- XXX: Look into posibility of using physics world instead
       end
     end
   end
@@ -107,6 +79,8 @@ local function GridCell(x, y, opts)
   local function draw()
     lg.setColor(state.players[state.playing].color)
     lg.rectangle("line", this.x, this.y, this.w, this.h)
+    -- local cell = state.matrix[opts.i][opts.j]
+    -- lg.print(lume.format("{1}:{2}", {cell.value, cell.owner or ""}), this.x, this.y)
     nuclei.draw()
   end
 
@@ -127,17 +101,12 @@ local function Grid(x, y, opts)
 
   local cells = {}
   for i, cols in ipairs(state.matrix) do
-    for j, value in ipairs(cols) do
+    for j, _ in ipairs(cols) do
       local cellX = x + pl + (j - 1) * opts.cellSize
       local cellY = y + ph + (i - 1) * opts.cellSize
       table.insert(
         cells,
-        GridCell(cellX, cellY, {
-          value = value,
-          size = opts.cellSize,
-          i = i,
-          j = j,
-        })
+        GridCell(cellX, cellY, { size = opts.cellSize, i = i, j = j })
       )
     end
   end
