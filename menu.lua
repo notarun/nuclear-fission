@@ -1,74 +1,62 @@
-local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
 local Color = require("color")
-local Scene = require("scene")
+local core = require("core")
+local font = require("font")
 local input = require("input")
 
-local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
+local lg, lm = love.graphics, love.mouse
 
-local function MenuTitle(title)
-  assert(type(title) == "string", "Invalid string `title`")
+local function MenuTitle()
+  local txt = lg.newText(font.lg, "nuclear fission")
 
-  local fnt = lg.newFont(24)
-  local txt = lg.newText(fnt, title)
-  local screenW, screenH = lg.getWidth(), lg.getHeight()
-
-  local x, y = (screenW - txt:getWidth()) / 2, (screenH - txt:getWidth()) / 2
-
-  local function draw()
-    lg.setColor(Color.CookiesAndCream)
-    lg.draw(txt, x, y)
+  local function update(_, it)
+    local vw, vh = lg.getDimensions()
+    it.props.w, it.props.h = txt:getDimensions()
+    it.props.x, it.props.y = (vw - it.props.w) / 2, (vh - it.props.h) / 3
   end
 
-  return { draw = draw }
+  local function draw(it)
+    lg.setColor(Color.CookiesAndCream)
+    lg.draw(txt, it.props.x, it.props.y)
+  end
+
+  return core.Entity({ update = update, draw = draw })
 end
 
-local function MenuButton(title, fn)
-  local this = {
-    x = 0,
-    y = 0,
-    w = 0,
-    h = 0,
-  }
-
-  assert(type(title) == "string", "Invalid string `title`")
-  assert(type(fn) == "function", "Invalid function `fn`")
-
+local function PNPButton(fn)
+  local txt = lg.newText(font.md, "Pass & Play")
   local hovering = false
-  local font = lg.newFont(24)
-  local text = lg.newText(font, title)
+  local tx, ty = 0, 0
 
-  local screenW, screenH = lg.getWidth(), lg.getHeight()
-  local txtW, txtH = text:getWidth(), text:getHeight()
-  this.w, this.h = lg.getWidth() / 2, txtH * 2
+  local function update(_, it)
+    local vw, vh = lg.getDimensions()
+    local tw, th = txt:getDimensions()
 
-  this.x, this.y = (screenW - this.w) / 2, (screenH - this.h) / 2
-  local txtX, txtY = this.x + (this.w - txtW) / 2, this.y + (this.h - txtH) / 2
+    it.props.w, it.props.h = vw / 2, th * 2
+    it.props.x, it.props.y = (vw - it.props.w) / 2, (vh - it.props.h) / 2
+    tx, ty =
+      it.props.x + (it.props.w - tw) / 2, it.props.y + (it.props.h - th) / 2
 
-  wrld:add(this, this.x, this.y, this.w, this.h)
-
-  local function update()
-    local x, y = lm.getPosition()
-    local items = wrld:queryPoint(x, y)
-    hovering = lume.find(items, this) ~= nil
+    local items = it.world:queryPoint(lm.getPosition())
+    hovering = lume.find(items, it) ~= nil
     if hovering and input:pressed("click") then fn() end
   end
 
-  local function draw()
-    lg.setColor(hovering and Color.ElectricPurple or Color.VividSkyBlue)
-    lg.rectangle("fill", this.x, this.y, this.w, this.h)
+  local function draw(it)
+    lg.setColor(hovering and Color.VividSkyBlue or Color.ElectricPurple)
+    lg.rectangle("fill", it.props.x, it.props.y, it.props.w, it.props.h)
 
     lg.setColor(hovering and Color.ChineseBlack or Color.BrightGray)
-    lg.draw(text, txtX, txtY)
+    lg.draw(txt, tx, ty)
   end
 
-  return { update = update, draw = draw }
+  return core.Entity({ update = update, draw = draw })
 end
 
 return function(goToGame)
-  return Scene({
-    MenuTitle("nuclear fission"),
-    MenuButton("play", goToGame),
+  return core.Scene({
+    MenuTitle(),
+    PNPButton(goToGame),
   })
 end

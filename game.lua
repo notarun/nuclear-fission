@@ -1,11 +1,9 @@
 local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
-local Color = require("color")
-local Scene = require("scene")
+local core = require("core")
 local input = require("input")
 local useStore = require("store")
-local util = require("util")
 
 local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
 
@@ -125,5 +123,5 @@ local function Grid(x, y, opts)
 end
 
 return function()
-  return Scene({ Grid(0, 0) })
+  return core.Scene({ Grid(0, 0) })
 end
