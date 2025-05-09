@@ -27,9 +27,7 @@ local function Nuclei(x, y, opts)
   local function draw()
     local cell = state.matrix[opts.i][opts.j]
 
-    if cell.owner then
-      lg.setColor(state.players[cell.owner].color)
-    end
+    if cell.owner then lg.setColor(state.players[cell.owner].color) end
 
     if cell.value == 1 then
       lg.circle("line", this.x, this.y, size)

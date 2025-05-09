@@ -1,9 +1,9 @@
-local lume = require("3rd.lume.lume")
-
 local Color = require("color")
 local util = require("util")
 
-local function DEFAULT_MATRIX_CELL() return { value = 0, owner = nil } end
+local function DEFAULT_MATRIX_CELL()
+  return { value = 0, owner = nil }
+end
 
 local function State()
   return {
