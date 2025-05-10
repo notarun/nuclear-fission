@@ -36,6 +36,7 @@ local function Entity(args)
   args.data = args.data or {}
   args.data.x, args.data.y = args.data.x or 0, args.data.y or 0
   args.data.w, args.data.h = args.data.w or 1, args.data.h or 1
+  args.events = args.events or {}
 
   validate({
     ["args.data.x"] = { value = args.data.x, type = "number" },
@@ -43,10 +44,17 @@ local function Entity(args)
     ["args.data.h"] = { value = args.data.h, type = "number" },
     ["args.data.w"] = { value = args.data.w, type = "number" },
     ["args.draw"] = { value = args.draw, type = "function" },
+    ["args.events"] = { value = args.events, type = "table" },
   })
 
+  local function emit(ev, ...)
+    local err = string.format("Invalid event key, val = %s", ev)
+    assert(args.events, err)
+    args.events[ev](...)
+  end
+
   local itm = { id = lume.uuid() }
-  local ctx = lume.merge(args.data, { item = itm })
+  local ctx = lume.merge(args.data, { item = itm, emit = emit })
 
   world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
 
@@ -65,7 +73,7 @@ local function Entity(args)
     lg.pop()
   end
 
-  return { update = update, draw = draw }
+  return { update = update, draw = draw, ctx = ctx }
 end
 
 local function Scene(args)
