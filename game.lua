@@ -1,4 +1,5 @@
 local lume = require("3rd.lume.lume")
+local toast = require("3rd.toasts.lovelyToasts")
 
 local core = require("core")
 local dh = require("draw")
@@ -24,7 +25,7 @@ local function Cell(i, j)
       local owner, playing = state.cell(i, j).owner, state.playing().idx
 
       if owner and owner ~= playing then
-        print("THIS CELL IS OWNED BY OTHER PLAYER")
+        toast.show("This cell is owned by other player")
       else
         state.fuseOrSplit(i, j, playing)
         state.nextMove()
