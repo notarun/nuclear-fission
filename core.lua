@@ -5,12 +5,19 @@ local lg = love.graphics
 local world = bump.newWorld()
 
 local function validate(tb)
+  local err
   assert(type(tb) == "table", "Invalid table `tb`")
 
-  local err
-
   for k, v in pairs(tb) do
-    err = string.format("Invalid %s `%s`", v.type, k)
+    local keys = lume.keys(v)
+
+    err = string.format("Required key `value` not found in `table.%s`", k)
+    assert(lume.find(keys, "value"), err)
+
+    err = string.format("Required key `type` not found in `table.%s`", k)
+    assert(lume.find(keys, "type"), err)
+
+    err = string.format("Invalid %s `%s`, val = %s", v.type, k, v.value)
     assert(type(v.value) == v.type, err)
 
     if v.min then

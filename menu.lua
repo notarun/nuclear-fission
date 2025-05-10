@@ -2,24 +2,15 @@ local lume = require("3rd.lume.lume")
 
 local Color = require("color")
 local core = require("core")
+local dh = require("draw")
 local input = require("input")
 local res = require("res")
 
-local lg, lm, lc = love.graphics, love.mouse, love.math
+local lg, lm = love.graphics, love.mouse
 
 local function MenuTitle()
   local txt = lg.newText(res.font.lg, "nuclear fission")
-
-  local function drawNeutron(x, y)
-    local mag = 0.1
-    local dx, dy = lc.random(-mag, mag), lc.random(-mag, mag)
-
-    lg.setColor(Color.ElectricPurple)
-    lg.circle("fill", x + dx, y + dy, 18)
-    lg.setColor(Color.White)
-    lg.setLineWidth(1)
-    lg.circle("line", x + dx, y + dy, 18)
-  end
+  local nc, nm = Color.ElectricPurple, 0.1
 
   local function update(_, ctx)
     local vw, vh = lg.getDimensions()
@@ -28,9 +19,9 @@ local function MenuTitle()
   end
 
   local function draw(ctx)
-    drawNeutron(ctx.x + ctx.w - 10, ctx.y)
-    drawNeutron(ctx.x + ctx.w, ctx.y + 10)
-    drawNeutron(ctx.x + ctx.w + 10, ctx.y)
+    dh.neutron(ctx.x + ctx.w - 10, ctx.y, nc, nm)
+    dh.neutron(ctx.x + ctx.w, ctx.y + 10, nc, nm)
+    dh.neutron(ctx.x + ctx.w + 10, ctx.y, nc, nm)
 
     lg.setColor(Color.CookiesAndCream)
     lg.draw(txt, ctx.x, ctx.y)
