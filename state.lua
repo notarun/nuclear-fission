@@ -121,20 +121,26 @@ local function playing()
   return { idx = idx, player = _state.players[idx] }
 end
 
-local function fuseOrSplit(i, j, owner)
+local function fuseOrSplit(i, j, owner, cb)
+  cb = cb or function() end
+
   validateCell(i, j)
   core.validate({
+    cb = { value = cb, type = "function" },
     owner = { value = owner, type = "number", min = 1, max = #_state.players },
   })
 
-  local neighbors = cellNeighbors(i, j)
-  local threshold = #neighbors - 1
   local cl = cell(i, j)
+  local neighbors = cellNeighbors(i, j)
 
-  if cl.count < threshold then
+  if cl.count < #neighbors then
     cl.count = cl.count + 1
     cl.owner = owner
-  else
+  end
+
+  if cl.count == #neighbors then
+    cb(neighbors)
+
     cl.count = 0
     cl.owner = nil
     for _, n in ipairs(neighbors) do
