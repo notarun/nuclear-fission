@@ -1,3 +1,5 @@
+local lume = require("3rd.lume.lume")
+
 local Color = require("color")
 local core = require("core")
 
@@ -5,7 +7,6 @@ local _state = {
   matrix = {},
   players = {},
   playing = nil,
-  winner = nil,
 }
 
 local colors = {
@@ -37,7 +38,6 @@ local function init(rows, cols, pCount)
   end
 
   _state.playing = 1
-  _state.winner = nil
 end
 
 local function matrixDimensions()
@@ -47,6 +47,22 @@ local function matrixDimensions()
   return r, c
 end
 
+local function validateCell(i, j)
+  local rMax, cMax = matrixDimensions()
+
+  core.validate({
+    i = { value = i, type = "number", min = 1, max = rMax },
+    j = { value = j, type = "number", min = 1, max = cMax },
+  })
+end
+
+local function cell(i, j)
+  validateCell(i, j)
+  local ret = _state.matrix[i][j]
+  ret.ownedBy = _state.players[ret.owner]
+  return ret
+end
+
 local function nextMove()
   local nxt = _state.playing + 1
   if nxt > #_state.players then
@@ -54,8 +70,27 @@ local function nextMove()
   else
     _state.playing = nxt
   end
+end
 
-  -- handle winner
+local function winner()
+  local row, col = matrixDimensions()
+  local ownedCells = {}
+
+  for i = 1, row do
+    for j = 1, col do
+      local owner = cell(i, j).owner
+      if owner then table.insert(ownedCells, owner) end
+    end
+  end
+
+  if #ownedCells < 2 then return nil end
+  local idx = lume.first(ownedCells)
+  local cnt = lume.count(ownedCells, function(x)
+    return x == idx
+  end)
+  if cnt ~= #ownedCells then return nil end
+
+  return { idx = idx, player = _state.players[idx] }
 end
 
 local function cellNeighbors(i, j)
@@ -79,22 +114,6 @@ local function cellNeighbors(i, j)
   end
 
   return neighbors
-end
-
-local function validateCell(i, j)
-  local rMax, cMax = matrixDimensions()
-
-  core.validate({
-    i = { value = i, type = "number", min = 1, max = rMax },
-    j = { value = j, type = "number", min = 1, max = cMax },
-  })
-end
-
-local function cell(i, j)
-  validateCell(i, j)
-  local ret = _state.matrix[i][j]
-  ret.ownedBy = _state.players[ret.owner]
-  return ret
 end
 
 local function playing()
@@ -127,6 +146,7 @@ end
 return {
   init = init,
   cell = cell,
+  winner = winner,
   playing = playing,
   nextMove = nextMove,
   fuseOrSplit = fuseOrSplit,

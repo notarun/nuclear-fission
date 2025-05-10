@@ -6,13 +6,32 @@ local dh = require("draw")
 local input = require("input")
 local state = require("state")
 
-local lg, lm = love.graphics, love.mouse
+local lg, lm, lw, le = love.graphics, love.mouse, love.window, love.event
+
+local function winnerModal(player)
+  core.validate({
+    player = { value = player, type = "table" },
+  })
+
+  local btns = { "REPLAY", "EXIT" }
+  local title = string.format("%s won!", player.label)
+  local resp = lw.showMessageBox(title, "Play again?", btns)
+
+  if resp == 1 then
+    state.init(12, 6, 2)
+  elseif resp == 2 then
+    le.quit(0)
+  end
+end
 
 local function Cell(i, j)
   local rows, cols = state.matrixDimensions()
   local nx, ny, nm = 0, 0, 0
 
   local function update(_, ctx)
+    local winner = state.winner()
+    if winner then winnerModal(winner.player) end
+
     local vw, vh = lg.getDimensions()
     ctx.w, ctx.h = vw / cols, vh / rows
     ctx.x, ctx.y = (j - 1) * ctx.w, (i - 1) * ctx.h
