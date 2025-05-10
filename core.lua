@@ -1,6 +1,7 @@
 local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
+local lg = love.graphics
 local world = bump.newWorld()
 
 local function validate(tb)
@@ -41,7 +42,9 @@ local function Entity(args)
   end
 
   local function draw()
+    lg.push()
     args.draw(item)
+    lg.pop()
   end
 
   return { update = update, draw = draw, item = item }
