@@ -4,6 +4,12 @@ local lume = require("3rd.lume.lume")
 local lg = love.graphics
 local world = bump.newWorld()
 
+function world:clear()
+  for _, it in ipairs(self:getItems()) do
+    self:remove(it)
+  end
+end
+
 local function validate(tb)
   assert(type(tb) == "table", "Invalid table `tb`")
 
@@ -14,40 +20,39 @@ local function validate(tb)
 end
 
 local function Entity(args)
-  args.x, args.y = args.x or 0, args.y or 0
-  args.w, args.h = args.w or 1, args.h or 1
+  args.data = args.data or {}
+  args.data.x, args.data.y = args.data.x or 0, args.data.y or 0
+  args.data.w, args.data.h = args.data.w or 1, args.data.h or 1
 
   validate({
-    ["args.x"] = { value = args.x, type = "number" },
-    ["args.y"] = { value = args.y, type = "number" },
-    ["args.h"] = { value = args.h, type = "number" },
-    ["args.w"] = { value = args.w, type = "number" },
+    ["args.data.x"] = { value = args.data.x, type = "number" },
+    ["args.data.y"] = { value = args.data.y, type = "number" },
+    ["args.data.h"] = { value = args.data.h, type = "number" },
+    ["args.data.w"] = { value = args.data.w, type = "number" },
     ["args.draw"] = { value = args.draw, type = "function" },
   })
 
-  local item = { id = lume.uuid(), props = args, world = world }
-  world:add(item, args.x, args.y, args.w, args.h)
+  local itm = { id = lume.uuid() }
+  local ctx = lume.merge(args.data, { itm = itm })
+
+  world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
 
   local function update(dt)
     if args.update then
-      args.update(dt, item)
-      world:update(
-        item,
-        item.props.x,
-        item.props.y,
-        item.props.w,
-        item.props.h
-      )
+      args.update(dt, ctx)
+      if world:hasItem(itm) then
+        world:update(itm, ctx.x, ctx.y, ctx.w, ctx.h)
+      end
     end
   end
 
   local function draw()
     lg.push()
-    args.draw(item)
+    args.draw(ctx)
     lg.pop()
   end
 
-  return { update = update, draw = draw, item = item }
+  return { update = update, draw = draw }
 end
 
 local function Scene(entities)
@@ -68,4 +73,9 @@ local function Scene(entities)
   return { update = update, draw = draw }
 end
 
-return { Scene = Scene, Entity = Entity, validate = validate }
+return {
+  Scene = Scene,
+  Entity = Entity,
+  validate = validate,
+  world = world,
+}

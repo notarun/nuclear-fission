@@ -23,17 +23,17 @@ local function MenuTitle()
 
   local function update(_, it)
     local vw, vh = lg.getDimensions()
-    it.props.w, it.props.h = txt:getDimensions()
-    it.props.x, it.props.y = (vw - it.props.w) / 2, (vh - it.props.h) / 3
+    it.w, it.h = txt:getDimensions()
+    it.x, it.y = (vw - it.w) / 2, (vh - it.h) / 3
   end
 
   local function draw(it)
-    drawNeutron(it.props.x + it.props.w - 10, it.props.y)
-    drawNeutron(it.props.x + it.props.w, it.props.y + 10)
-    drawNeutron(it.props.x + it.props.w + 10, it.props.y)
+    drawNeutron(it.x + it.w - 10, it.y)
+    drawNeutron(it.x + it.w, it.y + 10)
+    drawNeutron(it.x + it.w + 10, it.y)
 
     lg.setColor(Color.CookiesAndCream)
-    lg.draw(txt, it.props.x, it.props.y)
+    lg.draw(txt, it.x, it.y)
   end
 
   return core.Entity({ update = update, draw = draw })
@@ -48,19 +48,18 @@ local function PNPButton(fn)
     local vw, vh = lg.getDimensions()
     local tw, th = txt:getDimensions()
 
-    it.props.w, it.props.h = vw / 4, th * 3
-    it.props.x, it.props.y = (vw - it.props.w) / 4, (vh - it.props.h) / 2
-    tx, ty =
-      it.props.x + (it.props.w - tw) / 2, it.props.y + (it.props.h - th) / 1.2
+    it.w, it.h = vw / 4, th * 3
+    it.x, it.y = (vw - it.w) / 4, (vh - it.h) / 2
+    tx, ty = it.x + (it.w - tw) / 2, it.y + (it.h - th) / 1.2
 
-    local items = it.world:queryPoint(lm.getPosition())
-    hovering = lume.find(items, it) ~= nil
+    local items = core.world:queryPoint(lm.getPosition())
+    hovering = lume.find(items, it.itm) ~= nil
     if hovering and input:pressed("click") then fn() end
   end
 
   local function draw(it)
     lg.setColor(hovering and Color.VividSkyBlue or Color.ElectricPurple)
-    lg.rectangle("fill", it.props.x, it.props.y, it.props.w, it.props.h, 8)
+    lg.rectangle("fill", it.x, it.y, it.w, it.h, 8)
 
     lg.setColor(hovering and Color.ChineseBlack or Color.BrightGray)
     lg.draw(txt, tx, ty)
@@ -77,15 +76,14 @@ local function PWFButton()
     local vw, vh = lg.getDimensions()
     local tw, th = txt:getDimensions()
 
-    it.props.w, it.props.h = vw / 4, th * 3
-    it.props.x, it.props.y = (vw - it.props.w) / 1.34, (vh - it.props.h) / 2
-    tx, ty =
-      it.props.x + (it.props.w - tw) / 2, it.props.y + (it.props.h - th) / 1.2
+    it.w, it.h = vw / 4, th * 3
+    it.x, it.y = (vw - it.w) / 1.34, (vh - it.h) / 2
+    tx, ty = it.x + (it.w - tw) / 2, it.y + (it.h - th) / 1.2
   end
 
   local function draw(it)
     lg.setColor(Color.BrightGray)
-    lg.rectangle("fill", it.props.x, it.props.y, it.props.w, it.props.h, 8)
+    lg.rectangle("fill", it.x, it.y, it.w, it.h, 8)
 
     lg.setColor(Color.ChineseBlack)
     lg.draw(txt, tx, ty)
@@ -95,9 +93,17 @@ local function PWFButton()
 end
 
 return function(goToGame)
-  return core.Scene({
+  local entities = {}
+  lume.push(
+    entities,
     MenuTitle(),
-    PNPButton(goToGame),
     PWFButton(),
-  })
+    PNPButton(function()
+      goToGame()
+      lume.clear(entities)
+      core.world:clear()
+    end)
+  )
+
+  return core.Scene(entities)
 end
