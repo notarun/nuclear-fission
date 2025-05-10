@@ -1,10 +1,8 @@
 local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
-local roomy = require("3rd.roomy.roomy")
 
 local lg = love.graphics
-local noop = function() end
-local world, scene = bump.newWorld(), roomy.new()
+local world, _scenes = bump.newWorld(), {}
 
 local function validate(tb)
   local err
@@ -71,15 +69,11 @@ local function Entity(args)
 end
 
 local function Scene(args)
-  args.enter, args.leave = args.enter or noop, args.leave or noop
-  args.resume, args.pause = args.resume or noop, args.pause or noop
-
   validate({
-    ["args.entities"] = { value = args.entities, type = "table" },
+    ["args.id"] = { value = args.id, type = "string" },
     ["args.enter"] = { value = args.enter, type = "function" },
     ["args.leave"] = { value = args.leave, type = "function" },
-    ["args.pause"] = { value = args.pause, type = "function" },
-    ["args.resume"] = { value = args.resume, type = "function" },
+    ["args.entities"] = { value = args.entities, type = "table" },
   })
 
   local function update(dt)
@@ -94,20 +88,42 @@ local function Scene(args)
     end
   end
 
-  return {
+  local scene = {
     draw = draw,
     update = update,
     enter = args.enter,
     leave = args.leave,
-    pause = args.pause,
-    resume = args.resume,
   }
+
+  _scenes[args.id] = scene
+  return _scenes[args.id]
+end
+
+local function goToScene(id, args)
+  args = args or {}
+
+  validate({
+    id = { value = id, type = "string" },
+    args = { value = args, type = "table" },
+  })
+
+  local err = string.format("Invalid scene id, val = %s", id)
+  assert(_scenes[id], err)
+
+  if _scenes.current then _scenes.current.leave(args) end
+  _scenes.current = _scenes[id]
+  _scenes.current.enter(args)
+end
+
+local function scene()
+  return _scenes.current
 end
 
 return {
-  world = world,
   scene = scene,
+  world = world,
   Scene = Scene,
   Entity = Entity,
   validate = validate,
+  goToScene = goToScene,
 }
