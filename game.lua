@@ -21,18 +21,18 @@ local function Cell(i, j)
     local hovering = lume.find(items, ctx.item) ~= nil
 
     if hovering and input:pressed("click") then
-      local cl, playing = state.cell(i, j), state.playing().idx
+      local owner, playing = state.cell(i, j).owner, state.playing().idx
 
-      if cl.owner and cl.owner ~= playing then
+      if owner and owner ~= playing then
         print("THIS CELL IS OWNED BY OTHER PLAYER")
       else
         state.fuseOrSplit(i, j, playing)
         state.nextMove()
       end
-
-      local threshold = #state.cellNeighbors(i, j) - 1
-      nm = cl.count < threshold and 0 or 0.1
     end
+
+    local threshold = #state.cellNeighbors(i, j) - 1
+    nm = state.cell(i, j).count < threshold and 0 or 0.1
   end
 
   local function draw(ctx)
@@ -48,8 +48,8 @@ local function Cell(i, j)
         dh.neutron(nx + 10, ny, cell.ownedBy.color, nm)
       elseif cell.count == 3 then
         dh.neutron(nx - 10, ny, cell.ownedBy.color, nm)
-        dh.neutron(nx + 10, ny, cell.ownedBy.color, nm)
         dh.neutron(nx, ny + 10, cell.ownedBy.color, nm)
+        dh.neutron(nx + 10, ny, cell.ownedBy.color, nm)
       end
     end
   end
