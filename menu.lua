@@ -2,13 +2,13 @@ local lume = require("3rd.lume.lume")
 
 local Color = require("color")
 local core = require("core")
-local font = require("font")
 local input = require("input")
+local res = require("res")
 
 local lg, lm = love.graphics, love.mouse
 
 local function MenuTitle()
-  local txt = lg.newText(font.lg, "nuclear fission")
+  local txt = lg.newText(res.font.lg, "nuclear fission")
 
   local function update(_, it)
     local vw, vh = lg.getDimensions()
@@ -25,7 +25,7 @@ local function MenuTitle()
 end
 
 local function PNPButton(fn)
-  local txt = lg.newText(font.md, "Pass & Play")
+  local txt = lg.newText(res.font.md, "pass &\nplay")
   local hovering = false
   local tx, ty = 0, 0
 
@@ -33,10 +33,10 @@ local function PNPButton(fn)
     local vw, vh = lg.getDimensions()
     local tw, th = txt:getDimensions()
 
-    it.props.w, it.props.h = vw / 2, th * 2
-    it.props.x, it.props.y = (vw - it.props.w) / 2, (vh - it.props.h) / 2
+    it.props.w, it.props.h = vw / 4, th * 3
+    it.props.x, it.props.y = (vw - it.props.w) / 4, (vh - it.props.h) / 2
     tx, ty =
-      it.props.x + (it.props.w - tw) / 2, it.props.y + (it.props.h - th) / 2
+      it.props.x + (it.props.w - tw) / 2, it.props.y + (it.props.h - th) / 1.2
 
     local items = it.world:queryPoint(lm.getPosition())
     hovering = lume.find(items, it) ~= nil
@@ -45,9 +45,34 @@ local function PNPButton(fn)
 
   local function draw(it)
     lg.setColor(hovering and Color.VividSkyBlue or Color.ElectricPurple)
-    lg.rectangle("fill", it.props.x, it.props.y, it.props.w, it.props.h)
+    lg.rectangle("fill", it.props.x, it.props.y, it.props.w, it.props.h, 8)
 
     lg.setColor(hovering and Color.ChineseBlack or Color.BrightGray)
+    lg.draw(txt, tx, ty)
+  end
+
+  return core.Entity({ update = update, draw = draw })
+end
+
+local function PWFButton()
+  local txt = lg.newText(res.font.md, "play\nonline")
+  local tx, ty = 0, 0
+
+  local function update(_, it)
+    local vw, vh = lg.getDimensions()
+    local tw, th = txt:getDimensions()
+
+    it.props.w, it.props.h = vw / 4, th * 3
+    it.props.x, it.props.y = (vw - it.props.w) / 1.34, (vh - it.props.h) / 2
+    tx, ty =
+      it.props.x + (it.props.w - tw) / 2, it.props.y + (it.props.h - th) / 1.2
+  end
+
+  local function draw(it)
+    lg.setColor(Color.BrightGray)
+    lg.rectangle("fill", it.props.x, it.props.y, it.props.w, it.props.h, 8)
+
+    lg.setColor(Color.ChineseBlack)
     lg.draw(txt, tx, ty)
   end
 
@@ -58,5 +83,6 @@ return function(goToGame)
   return core.Scene({
     MenuTitle(),
     PNPButton(goToGame),
+    PWFButton(),
   })
 end

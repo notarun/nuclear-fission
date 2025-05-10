@@ -48,7 +48,7 @@ local function Entity(args)
 end
 
 local function Scene(entities)
-  assert(type(entities) == "table", "Invalid table `entities`")
+  validate({ entities = { value = entities, type = "table" } })
 
   local function update(dt)
     for _, b in ipairs(entities) do
