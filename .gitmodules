@@ -13,3 +13,6 @@
 [submodule "3rd/toasts"]
 	path = 3rd/toasts
 	url = https://codeberg.org/togfox/Lovely-Toasts
+[submodule "3rd/roomy"]
+	path = 3rd/roomy
+	url = https://github.com/tesselode/roomy

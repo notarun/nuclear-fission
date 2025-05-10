@@ -1,6 +1,7 @@
 local lume = require("3rd.lume.lume")
 
 local Color = require("color")
+local GameScene = require("game")
 local core = require("core")
 local dh = require("draw")
 local input = require("input")
@@ -83,6 +84,14 @@ local function PWFButton()
   return core.Entity({ update = update, draw = draw })
 end
 
-return function(goToGame)
-  return core.Scene({ MenuTitle(), PWFButton(), PNPButton(goToGame) })
-end
+return core.Scene({
+  entities = {
+    MenuTitle(),
+    PWFButton(),
+    PNPButton(function()
+      core.scene:enter(GameScene)
+    end),
+  },
+  enter = function() end,
+  leave = function() end,
+})

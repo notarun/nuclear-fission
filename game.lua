@@ -77,17 +77,20 @@ local function Cell(i, j)
   return core.Entity({ update = update, draw = draw })
 end
 
-return function()
-  state.init(12, 6, 2)
-
+return (function()
   local entities = {}
-  local rows, cols = state.matrixDimensions()
 
-  for i = 1, rows do
-    for j = 1, cols do
-      lume.push(entities, Cell(i, j))
-    end
-  end
-
-  return core.Scene(entities)
-end
+  return core.Scene({
+    entities = entities,
+    enter = function()
+      state.init(12, 6, 2)
+      local rows, cols = state.matrixDimensions()
+      for i = 1, rows do
+        for j = 1, cols do
+          lume.push(entities, Cell(i, j))
+        end
+      end
+    end,
+    leave = function() end,
+  })
+end)()

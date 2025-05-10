@@ -1,8 +1,9 @@
 local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
+local roomy = require("3rd.roomy.roomy")
 
 local lg = love.graphics
-local world = bump.newWorld()
+local world, scene = bump.newWorld(), roomy.new()
 
 local function validate(tb)
   local err
@@ -68,27 +69,37 @@ local function Entity(args)
   return { update = update, draw = draw }
 end
 
-local function Scene(entities)
-  validate({ entities = { value = entities, type = "table" } })
+local function Scene(args)
+  validate({
+    ["args.entities"] = { value = args.entities, type = "table" },
+    ["args.enter"] = { value = args.enter, type = "function" },
+    ["args.leave"] = { value = args.leave, type = "function" },
+  })
 
   local function update(dt)
-    for _, b in ipairs(entities) do
+    for _, b in ipairs(args.entities) do
       if b.update then b.update(dt) end
     end
   end
 
   local function draw()
-    for _, b in ipairs(entities) do
+    for _, b in ipairs(args.entities) do
       if b.draw then b.draw() end
     end
   end
 
-  return { update = update, draw = draw }
+  return {
+    draw = draw,
+    update = update,
+    enter = args.enter,
+    leave = args.leave,
+  }
 end
 
 return {
+  world = world,
+  scene = scene,
   Scene = Scene,
   Entity = Entity,
   validate = validate,
-  world = world,
 }
