@@ -33,7 +33,7 @@ local function Entity(args)
   })
 
   local itm = { id = lume.uuid() }
-  local ctx = lume.merge(args.data, { itm = itm })
+  local ctx = lume.merge(args.data, { item = itm })
 
   world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
 
