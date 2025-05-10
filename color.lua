@@ -13,6 +13,7 @@ setmetatable(Color, {
 
 Color.White = Color("#FFFFFF")
 Color.BrightGray = Color("#EFEFEF")
+Color.DiscordGreen = Color("#57F287")
 Color.VividSkyBlue = Color("#00C7F7")
 Color.ChineseBlack = Color("#111111")
 Color.ElectricPurple = Color("#BF00FF")

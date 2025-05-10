@@ -4,18 +4,24 @@ local lume = require("3rd.lume.lume")
 local lg = love.graphics
 local world = bump.newWorld()
 
-function world:clear()
-  for _, it in ipairs(self:getItems()) do
-    self:remove(it)
-  end
-end
-
 local function validate(tb)
   assert(type(tb) == "table", "Invalid table `tb`")
 
+  local err
+
   for k, v in pairs(tb) do
-    local err = string.format("Invalid %s `%s`", v.type, k)
+    err = string.format("Invalid %s `%s`", v.type, k)
     assert(type(v.value) == v.type, err)
+
+    if v.min then
+      err = string.format("%s must be >= %s, val = %s", k, v.min, v.value)
+      assert(v.value >= v.min, err)
+    end
+
+    if v.max then
+      err = string.format("%s must be <= %s, val = %s", k, v.max, v.value)
+      assert(v.value <= v.max, err)
+    end
   end
 end
 

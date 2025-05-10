@@ -93,17 +93,5 @@ local function PWFButton()
 end
 
 return function(goToGame)
-  local entities = {}
-  lume.push(
-    entities,
-    MenuTitle(),
-    PWFButton(),
-    PNPButton(function()
-      goToGame()
-      lume.clear(entities)
-      core.world:clear()
-    end)
-  )
-
-  return core.Scene(entities)
+  return core.Scene({ MenuTitle(), PWFButton(), PNPButton(goToGame) })
 end

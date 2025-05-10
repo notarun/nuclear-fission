@@ -1,127 +1,87 @@
-local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
+local Color = require("color")
 local core = require("core")
 local input = require("input")
-local useStore = require("store")
+local state = require("state")
 
-local lg, lm, wrld = love.graphics, love.mouse, bump.newWorld()
+local lg, lm, lc = love.graphics, love.mouse, love.math
 
-local function Nuclei(x, y, opts)
-  assert(opts.i, "Invalid param `opts.i`")
-  assert(opts.j, "Invalid param `opts.j`")
-  assert(type(opts.gridSz) == "number", "Invalid param `opts.gridSz`")
-
-  local state = useStore()
-
-  local size = 12
-  local this = {
-    x = x + opts.gridSz / 2,
-    y = y + opts.gridSz / 2,
-    h = size,
-    w = size,
-  }
-
-  local function draw()
-    local cell = state.matrix[opts.i][opts.j]
-
-    if cell.owner then lg.setColor(state.players[cell.owner].color) end
-
-    if cell.value == 1 then
-      lg.circle("line", this.x, this.y, size)
-    elseif cell.value == 2 then
-      lg.circle("line", this.x - 10, this.y, size)
-      lg.circle("line", this.x + 10, this.y, size)
-    elseif cell.value == 3 then
-      lg.circle("line", this.x - 10, this.y, size)
-      lg.circle("line", this.x + 10, this.y, size)
-      lg.circle("line", this.x, this.y + 10, size)
-    end
-  end
-
-  return { draw = draw }
-end
-
-local function GridCell(x, y, opts)
-  assert(type(opts.i) == "number", "Invalid number `opts.i`")
-  assert(type(opts.j) == "number", "Invalid number `opts.j`")
-
-  local state, actions = useStore()
-  local this = { x = x, y = y, h = opts.size, w = opts.size }
-  local nuclei = Nuclei(this.x, this.y, {
-    i = opts.i,
-    j = opts.j,
-    gridSz = opts.size,
+local function drawNeutron(x, y, color, vibeMag)
+  core.validate({
+    x = { value = x, type = "number" },
+    y = { value = x, type = "number" },
+    color = { value = color, type = "table" },
   })
 
-  wrld:add(this, this.x, this.y, this.w, this.h)
+  vibeMag = vibeMag or 0
+  local dx, dy = lc.random(-vibeMag, vibeMag), lc.random(-vibeMag, vibeMag)
 
-  local function update()
-    local mX, mY = lm.getPosition()
-    local items = wrld:queryPoint(mX, mY)
-    local hovering = lume.find(items, this) ~= nil
+  lg.setColor(color)
+  lg.circle("fill", x + dx, y + dy, 18)
+  lg.setColor(Color.White)
+  lg.setLineWidth(1)
+  lg.circle("line", x + dx, y + dy, 18)
+end
+
+local function Cell(i, j)
+  local rows, cols = state.matrixDimensions()
+
+  local function update(_, ctx)
+    local vw, vh = lg.getDimensions()
+    ctx.w, ctx.h = vw / cols, vh / rows
+    ctx.x, ctx.y = (j - 1) * ctx.w, (i - 1) * ctx.h
+
+    local items = core.world:queryPoint(lm.getPosition())
+    local hovering = lume.find(items, ctx.item) ~= nil
 
     if hovering and input:pressed("click") then
-      local owner = state.matrix[opts.i][opts.j].owner
-      if owner and owner ~= state.playing then
+      local owner, playing = state.cell(i, j).owner, state.playing().idx
+      if owner and owner ~= playing then
         print("THIS CELL IS OWNED BY OTHER PLAYER")
       else
-        actions.fuse(opts.i, opts.j, state.playing)
-        actions.nextPlayer()
+        state.fuseOrSplit(i, j, playing)
+        state.nextMove()
       end
     end
   end
 
-  local function draw()
-    lg.setColor(state.players[state.playing].color)
-    lg.rectangle("line", this.x, this.y, this.w, this.h)
-    -- local cell = state.matrix[opts.i][opts.j]
-    -- lg.print(lume.format("{1}:{2}", {cell.value, cell.owner or ""}), this.x, this.y)
-    nuclei.draw()
-  end
+  local function draw(ctx)
+    lg.setColor(state.playing().player.color)
+    lg.rectangle("line", ctx.x, ctx.y, ctx.w, ctx.h)
 
-  return { update = update, draw = draw }
-end
+    local cell = state.cell(i, j)
+    if cell.owner then
+      local vibe = 0.1
+      local nx, ny = ctx.x + ctx.w / 2, ctx.y + ctx.h / 2
 
-local function Grid(x, y, opts)
-  x, y, opts = x or 0, y or 0, opts or {}
-  opts.rows = opts.rows or 12
-  opts.cols = opts.cols or 6
-  opts.cellSize = opts.cellSize or 60
-
-  local w, h = opts.cellSize * opts.cols, opts.cellSize * opts.rows
-  local pl, ph = (lg.getWidth() - w) / 2, (lg.getHeight() - h) / 2
-
-  local state, actions = useStore()
-  actions.createMatrix(opts.rows, opts.cols)
-
-  local cells = {}
-  for i, cols in ipairs(state.matrix) do
-    for j, _ in ipairs(cols) do
-      local cellX = x + pl + (j - 1) * opts.cellSize
-      local cellY = y + ph + (i - 1) * opts.cellSize
-      table.insert(
-        cells,
-        GridCell(cellX, cellY, { size = opts.cellSize, i = i, j = j })
-      )
+      if cell.count == 1 then
+        drawNeutron(nx, ny, cell.ownedBy.color, vibe)
+      elseif cell.count == 2 then
+        drawNeutron(nx - 10, ny, cell.ownedBy.color, vibe)
+        drawNeutron(nx + 10, ny, cell.ownedBy.color, vibe)
+      elseif cell.count == 3 then
+        drawNeutron(nx - 10, ny, cell.ownedBy.color, vibe)
+        drawNeutron(nx + 10, ny, cell.ownedBy.color, vibe)
+        drawNeutron(nx, ny + 10, cell.ownedBy.color, vibe)
+      end
     end
   end
 
-  local function update(dt)
-    for _, c in ipairs(cells) do
-      c.update(dt)
-    end
-  end
-
-  local function draw()
-    for _, c in ipairs(cells) do
-      c.draw()
-    end
-  end
-
-  return { update = update, draw = draw }
+  return core.Entity({ update = update, draw = draw })
 end
 
 return function()
-  return core.Scene({ Grid(0, 0) })
+  state.init(12, 6, 2)
+
+  local entities = {}
+  local rows, cols = state.matrixDimensions()
+
+  for i = 1, rows do
+    for j = 1, cols do
+      lume.push(entities, Cell(i, j))
+    end
+  end
+
+  return core.Scene(entities)
 end
