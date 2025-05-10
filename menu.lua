@@ -1,17 +1,36 @@
 local lume = require("3rd.lume.lume")
 
 local Color = require("color")
-local GameScene = require("game")
 local core = require("core")
 local dh = require("draw")
+local game = require("game")
 local input = require("input")
 local res = require("res")
 
-local lg, lm = love.graphics, love.mouse
+local lg, lm, le = love.graphics, love.mouse, love.event
 
-local function MenuTitle()
-  local txt = lg.newText(res.font.lg, "nuclear fission")
-  local nc, nm = Color.ElectricPurple, 0.1
+local state = {
+  heading = {
+    title = "nuclear fission",
+    nColor = Color.LavenderIndigo,
+  },
+  leftBtn = {
+    label = "pass &\nplay",
+    fn = function()
+      core.scene:push(game)
+    end,
+  },
+  rightBtn = {
+    label = "exit \ngame",
+    fn = function()
+      le.quit(0)
+    end,
+  },
+}
+
+local function Heading()
+  local txt = lg.newText(res.font.lg, state.heading.title)
+  local nc, nm = state.heading.nColor, 0.1
 
   local function update(_, ctx)
     local vw, vh = lg.getDimensions()
@@ -31,10 +50,9 @@ local function MenuTitle()
   return core.Entity({ update = update, draw = draw })
 end
 
-local function PNPButton(fn)
-  local txt = lg.newText(res.font.md, "pass &\nplay")
-  local hovering = false
-  local tx, ty = 0, 0
+local function LeftButton()
+  local txt = lg.newText(res.font.md, state.leftBtn.label)
+  local tx, ty, hovering = 0, 0, false
 
   local function update(_, ctx)
     local vw, vh = lg.getDimensions()
@@ -46,23 +64,23 @@ local function PNPButton(fn)
 
     local items = core.world:queryPoint(lm.getPosition())
     hovering = lume.find(items, ctx.item) ~= nil
-    if hovering and input:pressed("click") then fn() end
+    if hovering and input:pressed("click") then state.leftBtn.fn() end
   end
 
   local function draw(ctx)
-    lg.setColor(hovering and Color.VividSkyBlue or Color.ElectricPurple)
+    lg.setColor(Color.LavenderIndigo)
     lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 8)
 
-    lg.setColor(hovering and Color.ChineseBlack or Color.BrightGray)
+    lg.setColor(Color.White)
     lg.draw(txt, tx, ty)
   end
 
   return core.Entity({ update = update, draw = draw })
 end
 
-local function PWFButton()
-  local txt = lg.newText(res.font.md, "play\nonline")
-  local tx, ty = 0, 0
+local function RightButton()
+  local txt = lg.newText(res.font.md, state.rightBtn.label)
+  local tx, ty, hovering = 0, 0, false
 
   local function update(_, ctx)
     local vw, vh = lg.getDimensions()
@@ -71,13 +89,17 @@ local function PWFButton()
     ctx.w, ctx.h = vw / 4, th * 3
     ctx.x, ctx.y = (vw - ctx.w) / 1.34, (vh - ctx.h) / 2
     tx, ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 1.2
+
+    local items = core.world:queryPoint(lm.getPosition())
+    hovering = lume.find(items, ctx.item) ~= nil
+    if hovering and input:pressed("click") then state.rightBtn.fn() end
   end
 
   local function draw(ctx)
-    lg.setColor(Color.BrightGray)
+    lg.setColor(Color.FireOpal)
     lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 8)
 
-    lg.setColor(Color.ChineseBlack)
+    lg.setColor(Color.White)
     lg.draw(txt, tx, ty)
   end
 
@@ -85,13 +107,9 @@ local function PWFButton()
 end
 
 return core.Scene({
-  entities = {
-    MenuTitle(),
-    PWFButton(),
-    PNPButton(function()
-      core.scene:enter(GameScene)
-    end),
-  },
-  enter = function() end,
-  leave = function() end,
+  entities = { Heading(), RightButton(), LeftButton() },
+  resume = function(_, _, label, color)
+    state.heading.title = string.format("%s won!", label)
+    state.heading.nColor = color
+  end,
 })

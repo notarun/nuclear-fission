@@ -3,6 +3,7 @@ local lume = require("3rd.lume.lume")
 local roomy = require("3rd.roomy.roomy")
 
 local lg = love.graphics
+local noop = function() end
 local world, scene = bump.newWorld(), roomy.new()
 
 local function validate(tb)
@@ -70,10 +71,15 @@ local function Entity(args)
 end
 
 local function Scene(args)
+  args.enter, args.leave = args.enter or noop, args.leave or noop
+  args.resume, args.pause = args.resume or noop, args.pause or noop
+
   validate({
     ["args.entities"] = { value = args.entities, type = "table" },
     ["args.enter"] = { value = args.enter, type = "function" },
     ["args.leave"] = { value = args.leave, type = "function" },
+    ["args.pause"] = { value = args.pause, type = "function" },
+    ["args.resume"] = { value = args.resume, type = "function" },
   })
 
   local function update(dt)
@@ -93,6 +99,8 @@ local function Scene(args)
     update = update,
     enter = args.enter,
     leave = args.leave,
+    pause = args.pause,
+    resume = args.resume,
   }
 end
 

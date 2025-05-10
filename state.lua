@@ -10,10 +10,10 @@ local _state = {
 }
 
 local colors = {
-  Color.VividSkyBlue,
-  Color.DiscordGreen,
-  Color.ElectricPurple,
-  Color.CookiesAndCream,
+  Color.LavenderIndigo,
+  Color.Turquoise,
+  Color.FireOpal,
+  Color.Kiwi,
 }
 
 local function init(rows, cols, pCount)

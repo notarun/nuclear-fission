@@ -1,9 +1,9 @@
 local toast = require("3rd.toasts.lovelyToasts")
 
 local Color = require("color")
-local MenuScene = require("menu")
 local core = require("core")
 local input = require("input")
+local menu = require("menu")
 local res = require("res")
 
 function love.load()
@@ -11,7 +11,7 @@ function love.load()
   toast.style.backgroundColor = Color.ChineseBlack
   toast.options.animationDuration = 0.1
 
-  core.scene:enter(MenuScene)
+  core.scene:push(menu)
 end
 
 function love.update(dt)
