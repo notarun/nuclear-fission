@@ -122,7 +122,9 @@ local function playing()
 end
 
 local function fuseOrSplit(i, j, owner, cb)
-  cb = cb or function() end
+  cb = cb or function(e, d)
+    require("dump")({ ev = e, data = d })
+  end
 
   validateCell(i, j)
   core.validate({
@@ -136,14 +138,15 @@ local function fuseOrSplit(i, j, owner, cb)
   if cl.count < #neighbors then
     cl.count = cl.count + 1
     cl.owner = owner
+    cb("add", { self = { i = i, j = j } })
   end
 
   if cl.count == #neighbors then
-    cb(neighbors)
-
     cl.count = 0
     cl.owner = nil
+
     for _, n in ipairs(neighbors) do
+      cb("split", { self = { i = i, j = j }, neighbor = n })
       fuseOrSplit(n.i, n.j, owner)
     end
   end

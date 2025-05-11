@@ -1,10 +1,10 @@
-local inspect = require("3rd.inspect.inspect")
+local lume = require("3rd.lume.lume")
 
 local dump = {}
 
 setmetatable(dump, {
   __call = function(_, val)
-    print(inspect(val))
+    print(lume.serialize(val))
   end,
 })
 
