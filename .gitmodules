@@ -13,3 +13,6 @@
 [submodule "3rd/toasts"]
 	path = 3rd/toasts
 	url = https://codeberg.org/togfox/Lovely-Toasts
+[submodule "3rd/flux"]
+	path = 3rd/flux
+	url = https://github.com/rxi/flux

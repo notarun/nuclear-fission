@@ -2,7 +2,7 @@ local lume = require("3rd.lume.lume")
 local toast = require("3rd.toasts.lovelyToasts")
 
 local core = require("core")
-local dh = require("draw")
+local drw = require("draw")
 local input = require("input")
 local state = require("state")
 
@@ -46,14 +46,14 @@ local function Cell(i, j)
     local cell = state.cell(i, j)
     if cell.owner then
       if cell.count == 1 then
-        dh.neutron(nx, ny, cell.ownedBy.color, nm)
+        drw.neutron(nx, ny, cell.ownedBy.color, nm)
       elseif cell.count == 2 then
-        dh.neutron(nx - 10, ny, cell.ownedBy.color, nm)
-        dh.neutron(nx + 10, ny, cell.ownedBy.color, nm)
+        drw.neutron(nx - 10, ny, cell.ownedBy.color, nm)
+        drw.neutron(nx + 10, ny, cell.ownedBy.color, nm)
       elseif cell.count == 3 then
-        dh.neutron(nx - 10, ny, cell.ownedBy.color, nm)
-        dh.neutron(nx, ny + 10, cell.ownedBy.color, nm)
-        dh.neutron(nx + 10, ny, cell.ownedBy.color, nm)
+        drw.neutron(nx - 10, ny, cell.ownedBy.color, nm)
+        drw.neutron(nx, ny + 10, cell.ownedBy.color, nm)
+        drw.neutron(nx + 10, ny, cell.ownedBy.color, nm)
       end
     end
   end

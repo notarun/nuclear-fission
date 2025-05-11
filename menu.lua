@@ -1,8 +1,9 @@
+local flux = require("3rd.flux.flux")
 local lume = require("3rd.lume.lume")
 
 local Color = require("color")
 local core = require("core")
-local dh = require("draw")
+local drw = require("draw")
 local input = require("input")
 local res = require("res")
 local state = require("state")
@@ -25,9 +26,9 @@ local function Heading(title, nColor)
   end
 
   local function draw(ctx)
-    dh.neutron(ctx.x + ctx.w - 10, ctx.y, nc, nm)
-    dh.neutron(ctx.x + ctx.w, ctx.y + 10, nc, nm)
-    dh.neutron(ctx.x + ctx.w + 10, ctx.y, nc, nm)
+    drw.neutron(ctx.x + ctx.w - 10, ctx.y, nc, nm)
+    drw.neutron(ctx.x + ctx.w, ctx.y + 10, nc, nm)
+    drw.neutron(ctx.x + ctx.w + 10, ctx.y, nc, nm)
 
     lg.setColor(Color.CookiesAndCream)
     lg.draw(txt, ctx.x, ctx.y)
@@ -44,18 +45,25 @@ local function LeftButton(label, fn)
 
   local txt = lg.newText(res.font.md, label)
   local tx, ty, hovering = 0, 0, false
+  local zoom = { dw = 0, dh = 0 }
 
   local function update(_, ctx)
     local vw, vh = lg.getDimensions()
     local tw, th = txt:getDimensions()
 
-    ctx.w, ctx.h = vw / 4, th * 3
+    ctx.w, ctx.h = (vw / 4) + zoom.dw, (th * 3) + zoom.dh
     ctx.x, ctx.y = (vw - ctx.w) / 4, (vh - ctx.h) / 2
     tx, ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 1.2
 
     local items = core.world:queryPoint(lm.getPosition())
     hovering = lume.find(items, ctx.item) ~= nil
-    if hovering and input:pressed("click") then fn() end
+
+    if hovering then
+      if input:pressed("click") then fn() end
+      flux.to(zoom, 0.1, { dw = 6, dh = 6 }):ease("backout")
+    else
+      flux.to(zoom, 0.1, { dw = 0, dh = 0 }):ease("backout")
+    end
   end
 
   local function draw(ctx)
@@ -77,18 +85,25 @@ local function RightButton(label, fn)
 
   local txt = lg.newText(res.font.md, label)
   local tx, ty, hovering = 0, 0, false
+  local zoom = { dw = 0, dh = 0 }
 
   local function update(_, ctx)
     local vw, vh = lg.getDimensions()
     local tw, th = txt:getDimensions()
 
-    ctx.w, ctx.h = vw / 4, th * 3
+    ctx.w, ctx.h = (vw / 4) + zoom.dw, (th * 3) + zoom.dh
     ctx.x, ctx.y = (vw - ctx.w) / 1.34, (vh - ctx.h) / 2
     tx, ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 1.2
 
     local items = core.world:queryPoint(lm.getPosition())
     hovering = lume.find(items, ctx.item) ~= nil
-    if hovering and input:pressed("click") then fn() end
+
+    if hovering then
+      if input:pressed("click") then fn() end
+      flux.to(zoom, 0.1, { dw = 6, dh = 6 }):ease("backout")
+    else
+      flux.to(zoom, 0.1, { dw = 0, dh = 0 }):ease("backout")
+    end
   end
 
   local function draw(ctx)
@@ -115,7 +130,7 @@ return (function()
       end,
     },
     rightBtn = {
-      label = "exit \ngame",
+      label = "exit  \ngame",
       fn = function()
         le.quit(0)
       end,

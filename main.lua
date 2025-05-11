@@ -1,3 +1,4 @@
+local flux = require("3rd.flux.flux")
 local toast = require("3rd.toasts.lovelyToasts")
 
 local Color = require("color")
@@ -17,6 +18,7 @@ function love.load()
 end
 
 function love.update(dt)
+  flux.update(dt)
   input:update()
   toast.update(dt)
   core.scene().update(dt)
