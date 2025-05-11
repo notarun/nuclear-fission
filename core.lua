@@ -49,6 +49,13 @@ local function Entity(args)
     ["args.tags"] = { value = args.events, type = "table" },
   })
 
+  local itm = { id = lume.uuid() }
+  local ctx =
+    lume.merge(args.data, { item = itm, tags = args.tags, dead = false })
+
+  if args.load then args.load(ctx) end
+  world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
+
   local function emit(...)
     -- compatibility with lume's each method, since it passes self as first arg
     local params = { ... }
@@ -58,17 +65,8 @@ local function Entity(args)
     validate({ ev = { value = ev, type = "string" } })
     local err = string.format("Invalid event key, val = %s", ev)
     assert(args.events[ev], err)
-    args.events[ev](unpack(lume.slice(params, 2)))
+    args.events[ev](ctx, unpack(lume.slice(params, 2)))
   end
-
-  local itm = { id = lume.uuid() }
-  local ctx = lume.merge(
-    args.data,
-    { item = itm, emit = emit, tags = args.tags, dead = false }
-  )
-
-  if args.load then args.load(ctx) end
-  world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
 
   local function update(dt)
     if args.update then

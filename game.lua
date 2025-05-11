@@ -32,7 +32,7 @@ end
 local function Neutron(data)
   local i, j = data.self.i, data.self.j
   local cell = state.cell(i, j)
-  local color, vibeMag, goalPos = cell.ownedBy.color, 0, {}
+  local color, vibeMag, moving = cell.ownedBy.color, 0, false
 
   local dirs = {
     { { 0, 0 }, { 0, 0 } },
@@ -41,14 +41,20 @@ local function Neutron(data)
     { { -10, 0 }, { 0, -10 }, { 0, 10 }, { 10, 0 } },
   }
 
-  local function vibrate(mag)
+  local function vibrate(_, mag)
     vibeMag = mag
   end
 
-  local function split(pld)
+  local function split(ctx, pld)
     local n = pld.neighbors[data.idx]
     local cx, cy, cw, ch = cellPosAndSz(n.i, n.j)
-    goalPos.x, goalPos.y = cx + cw / 2, cy + ch / 2
+    flux
+      .to(ctx, 0.1, { x = cx + cw / 2, y = cy + ch / 2 })
+      :ease("linear")
+      :oncomplete(function()
+        ctx.dead = true
+      end)
+    moving = true
   end
 
   local function load(ctx)
@@ -57,18 +63,14 @@ local function Neutron(data)
   end
 
   local function update(_, ctx)
-    if goalPos.x and goalPos.y then
-      flux.to(ctx, 0.1, goalPos):ease("linear"):oncomplete(function()
-        ctx.dead = true
-      end)
-    else
-      load(ctx)
+    if moving then return end
 
-      local dir = dirs[cell.count] and dirs[cell.count][data.idx]
-      if dir then
-        ctx.x, ctx.y = ctx.x + dir[1], ctx.y + dir[2]
-        color = cell.ownedBy.color
-      end
+    load(ctx)
+
+    local dir = dirs[cell.count] and dirs[cell.count][data.idx]
+    if dir then
+      ctx.x, ctx.y = ctx.x + dir[1], ctx.y + dir[2]
+      color = cell.ownedBy.color
     end
   end
 
