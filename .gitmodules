@@ -13,6 +13,3 @@
 [submodule "3rd/flux"]
 	path = 3rd/flux
 	url = https://github.com/rxi/flux
-[submodule "3rd/tick"]
-	path = 3rd/tick
-	url = https://github.com/rxi/tick
