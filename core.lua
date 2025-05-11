@@ -62,6 +62,7 @@ local function Entity(args)
   local itm = { id = lume.uuid() }
   local ctx = lume.merge(args.data, { item = itm, emit = emit })
 
+  if args.load then args.load(ctx) end
   world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
 
   local function update(dt)
