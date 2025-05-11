@@ -136,18 +136,20 @@ local function fuseOrSplit(i, j, owner, cb)
   local neighbors = cellNeighbors(i, j)
 
   if cl.count < #neighbors then
-    cl.count = cl.count + 1
+    local count = cl.count + 1
+    cl.count = count
     cl.owner = owner
-    cb("add", { self = { i = i, j = j } })
+    cb("add", { self = { i = i, j = j }, idx = count })
   end
 
   if cl.count == #neighbors then
     cl.count = 0
     cl.owner = nil
 
+    cb("split", { self = { i = i, j = j }, neighbors = neighbors })
+
     for _, n in ipairs(neighbors) do
-      cb("split", { self = { i = i, j = j }, neighbor = n })
-      fuseOrSplit(n.i, n.j, owner)
+      fuseOrSplit(n.i, n.j, owner, cb)
     end
   end
 end

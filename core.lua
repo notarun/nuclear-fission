@@ -1,7 +1,7 @@
 local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
-local lg = love.graphics
+local lg, unpack = love.graphics, unpack or table.unpack
 local world, _scenes = bump.newWorld(), {}
 
 local function validate(tb)
@@ -47,10 +47,16 @@ local function Entity(args)
     ["args.events"] = { value = args.events, type = "table" },
   })
 
-  local function emit(ev, ...)
+  local function emit(...)
+    -- compatibility with lume's each method, since it passes self as first arg
+    local params = { ... }
+    if type(params[1]) == "table" then params = lume.slice(params, 2) end
+    local ev = params[1]
+
+    validate({ ev = { value = ev, type = "string" } })
     local err = string.format("Invalid event key, val = %s", ev)
-    assert(args.events, err)
-    args.events[ev](...)
+    assert(args.events[ev], err)
+    args.events[ev](unpack(lume.slice(params, 2)))
   end
 
   local itm = { id = lume.uuid() }
@@ -73,7 +79,7 @@ local function Entity(args)
     lg.pop()
   end
 
-  return { update = update, draw = draw, ctx = ctx }
+  return { update = update, draw = draw, ctx = ctx, emit = emit }
 end
 
 local function Scene(args)
