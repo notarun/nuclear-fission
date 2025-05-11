@@ -34,6 +34,7 @@ end
 
 local function Entity(args)
   args.data = args.data or {}
+  args.tags = args.tags or {}
   args.data.x, args.data.y = args.data.x or 0, args.data.y or 0
   args.data.w, args.data.h = args.data.w or 1, args.data.h or 1
   args.events = args.events or {}
@@ -43,8 +44,9 @@ local function Entity(args)
     ["args.data.y"] = { value = args.data.y, type = "number" },
     ["args.data.h"] = { value = args.data.h, type = "number" },
     ["args.data.w"] = { value = args.data.w, type = "number" },
-    ["args.draw"] = { value = args.draw, type = "function" },
     ["args.events"] = { value = args.events, type = "table" },
+    ["args.draw"] = { value = args.draw, type = "function" },
+    ["args.tags"] = { value = args.events, type = "table" },
   })
 
   local function emit(...)
@@ -60,7 +62,10 @@ local function Entity(args)
   end
 
   local itm = { id = lume.uuid() }
-  local ctx = lume.merge(args.data, { item = itm, emit = emit })
+  local ctx = lume.merge(
+    args.data,
+    { item = itm, emit = emit, tags = args.tags, dead = false }
+  )
 
   if args.load then args.load(ctx) end
   world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
@@ -92,8 +97,9 @@ local function Scene(args)
   })
 
   local function update(dt)
-    for _, b in ipairs(args.entities) do
-      if b.update then b.update(dt) end
+    for i, e in lume.ripairs(args.entities) do
+      if e.update then e.update(dt) end
+      if e.ctx.dead then table.remove(args.entities, i) end
     end
   end
 
