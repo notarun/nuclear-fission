@@ -1,4 +1,5 @@
 local flux = require("3rd.flux.flux")
+local tick = require("3rd.tick.tick")
 local toast = require("3rd.toasts.lovelyToasts")
 
 local Color = require("color")
@@ -18,6 +19,7 @@ function love.load()
 end
 
 function love.update(dt)
+  tick.update(dt)
   flux.update(dt)
   input:update()
   toast.update(dt)

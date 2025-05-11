@@ -143,10 +143,10 @@ local function fuseOrSplit(i, j, owner, cb)
   end
 
   if cl.count == #neighbors then
+    cb("split", { self = { i = i, j = j }, neighbors = neighbors })
+
     cl.count = 0
     cl.owner = nil
-
-    cb("split", { self = { i = i, j = j }, neighbors = neighbors })
 
     for _, n in ipairs(neighbors) do
       fuseOrSplit(n.i, n.j, owner, cb)
