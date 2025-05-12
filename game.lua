@@ -140,9 +140,6 @@ end
 
 local function Cell(i, j)
   local function update(_, ctx)
-    local winner = state.winner()
-    if winner then core.goToScene("menu", { mode = "result" }) end
-
     ctx.x, ctx.y, ctx.w, ctx.h = cellPosAndSz(i, j)
 
     local items = core.world:queryPoint(lm.getPosition())
@@ -154,7 +151,12 @@ local function Cell(i, j)
       if owner and owner ~= playing then
         toast.show("This cell is owned by other player")
       else
-        fuseOrSplit(i, j, state.playing().idx, state.nextMove)
+        fuseOrSplit(i, j, state.playing().idx, function()
+          if state.winner() then
+            core.goToScene("menu", { mode = "result" })
+          end
+          state.nextMove()
+        end)
       end
     end
 

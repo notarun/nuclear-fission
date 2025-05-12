@@ -162,7 +162,9 @@ return (function()
       )
     end,
     leave = function()
-      lume.clear(entities)
+      lume.each(entities, function(e)
+        e.ctx.dead = true
+      end)
     end,
   })
 end)()

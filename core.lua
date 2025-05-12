@@ -92,8 +92,11 @@ local function Scene(args)
 
   local function update(dt)
     for i, e in lume.ripairs(args.entities) do
-      if e.ctx.dead then table.remove(args.entities, i) end
       if e.update then e.update(dt) end
+      if e.ctx.dead then
+        table.remove(args.entities, i)
+        world:remove(e.ctx.item)
+      end
     end
   end
 
