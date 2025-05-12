@@ -125,7 +125,7 @@ local function Cell(i, j)
     local items = core.world:queryPoint(lm.getPosition())
     local hovering = lume.find(items, ctx.item) ~= nil
 
-    if hovering and input:pressed("click") then
+    if not coro and hovering and input:pressed("click") then
       local owner, playing = state.cell(i, j).owner, state.playing().idx
 
       if owner and owner ~= playing then
@@ -133,6 +133,7 @@ local function Cell(i, j)
       else
         coro = coroutine.create(function()
           state.fuseOrSplit(i, j, state.playing().idx, fuseOrSplitCb)
+          coro = nil
           state.nextMove()
         end)
         coroutine.resume(coro)
