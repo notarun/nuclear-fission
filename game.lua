@@ -11,12 +11,12 @@ local state = require("state")
 local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
-local entities, coro, splitTime = {}, nil, 0.3
+local entities, coro, splitTime = {}, nil, 0.2
 
 local function neutronsInCell(i, j)
   return lume.filter(entities, function(e)
-    local isNeutron = lume.find(e.ctx.tags, "neutron")
-    local inSameCell = lume.find(e.ctx.tags, sf("%s-%s", i, j))
+    local isNeutron = lume.find(e.ctx.item.tags, "neutron")
+    local inSameCell = lume.find(e.ctx.item.tags, sf("cell:%s-%s", i, j))
     return isNeutron and inSameCell
   end)
 end
@@ -55,10 +55,7 @@ local function Neutron(i, j, idx)
     flux
       .to(ctx, splitTime, { x = cx + cw / 2, y = cy + ch / 2 })
       :ease("linear")
-      :oncomplete(function()
-        ctx.dead = true
-        if oncomplete then oncomplete() end
-      end)
+      :oncomplete(oncomplete)
     moving = true
   end
 
@@ -68,7 +65,20 @@ local function Neutron(i, j, idx)
   end
 
   local function update(_, ctx)
-    if moving then return end
+    if moving then
+      local _, _, cols = core.world:check(ctx.item, ctx.x, ctx.y)
+      lume
+        .chain(cols)
+        :filter(function(c)
+          local isNeutron = lume.find(c.other.tags, "neutron")
+          local isSibling = lume.find(c.other.tags, sf("cell-%s-%s", i, j))
+          return isNeutron and not isSibling
+        end)
+        :each(function()
+          ctx.dead = true
+        end)
+      return
+    end
 
     load(ctx)
 
@@ -87,8 +97,12 @@ local function Neutron(i, j, idx)
     load = load,
     draw = draw,
     update = update,
-    tags = { "neutron", sf("%s-%s", i, j) },
-    events = { vibrate = vibrate, split = split, capture = capture },
+    tags = { "neutron", sf("cell:%s-%s", i, j) },
+    events = {
+      split = split,
+      vibrate = vibrate,
+      capture = capture,
+    },
   })
 end
 
@@ -170,6 +184,8 @@ return core.Scene({
     end
   end,
   leave = function()
-    lume.clear(entities)
+    lume.each(entities, function(e)
+      e.ctx.dead = true
+    end)
   end,
 })
