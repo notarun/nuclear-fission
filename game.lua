@@ -45,6 +45,10 @@ local function Neutron(data)
     vibeMag = mag
   end
 
+  local function capture(_, by)
+    color = state.player(by).player.color
+  end
+
   local function split(ctx, pld, oncomplete)
     local n = pld.neighbors[data.idx]
     local cx, cy, cw, ch = cellPosAndSz(n.i, n.j)
@@ -84,15 +88,19 @@ local function Neutron(data)
     draw = draw,
     update = update,
     tags = { "neutron", sf("%s-%s", i, j) },
-    events = { vibrate = vibrate, split = split },
+    events = { vibrate = vibrate, split = split, capture = capture },
   })
 end
 
 local function fuseOrSplitCb(ev, pld)
+  local i, j = pld.self.i, pld.self.j
+
   if ev == "add" then
     lume.push(entities, Neutron(pld))
+  elseif ev == "capture" then
+    neutronsInCell(i, j):each("emit", "capture", pld.by)
   elseif ev == "split" then
-    local i, j, active = pld.self.i, pld.self.j, #pld.neighbors
+    local active = #pld.neighbors
 
     local oncomplete = function()
       active = active - 1
