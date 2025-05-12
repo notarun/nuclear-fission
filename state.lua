@@ -130,7 +130,7 @@ end
 
 local function fuseOrSplit(i, j, owner, cb)
   cb = cb or function(e, d)
-    require("dump")({ ev = e, data = d })
+    require("fn").dump({ ev = e, data = d })
   end
 
   validateCell(i, j)
@@ -155,7 +155,7 @@ local function fuseOrSplit(i, j, owner, cb)
     cl.count = 0
     cl.owner = nil
 
-    for _, n in ipairs(neighbors) do
+    for _, n in lume.ripairs(neighbors) do
       cb("capture", { self = { i = n.i, j = n.j }, by = owner })
       fuseOrSplit(n.i, n.j, owner, cb)
     end

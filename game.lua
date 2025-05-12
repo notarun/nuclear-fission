@@ -4,16 +4,17 @@ local toast = require("3rd.toasts.lovelyToasts")
 
 local core = require("core")
 local drw = require("draw")
+local fn = require("fn")
 local input = require("input")
 local state = require("state")
 
 local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
-local entities, coro, splitTime = {}, nil, 0.2
+local entities, coro, splitTime = {}, nil, 0.3
 
 local function neutronsInCell(i, j)
-  return lume.chain(entities):filter(function(e)
+  return lume.filter(entities, function(e)
     local isNeutron = lume.find(e.ctx.tags, "neutron")
     local inSameCell = lume.find(e.ctx.tags, sf("%s-%s", i, j))
     return isNeutron and inSameCell
@@ -94,11 +95,12 @@ end
 
 local function fuseOrSplitCb(ev, pld)
   local i, j = pld.self.i, pld.self.j
+  local neutrons = neutronsInCell(i, j)
 
   if ev == "add" then
     lume.push(entities, Neutron(pld))
   elseif ev == "capture" then
-    neutronsInCell(i, j):each("emit", "capture", pld.by)
+    fn.each(neutrons, "emit", "capture", pld.by)
   elseif ev == "split" then
     local active = #pld.neighbors
 
@@ -109,7 +111,7 @@ local function fuseOrSplitCb(ev, pld)
       end
     end
 
-    neutronsInCell(i, j):each("emit", "split", pld, oncomplete)
+    fn.each(neutrons, "emit", "split", pld, oncomplete)
     coroutine.yield()
   end
 end
@@ -140,7 +142,7 @@ local function Cell(i, j)
 
     local threshold = #state.cellNeighbors(i, j) - 1
     local magnitude = state.cell(i, j).count < threshold and 0 or 0.1
-    neutronsInCell(i, j):each("emit", "vibrate", magnitude)
+    fn.each(neutronsInCell(i, j), "emit", "vibrate", magnitude)
   end
 
   local function draw(ctx)
