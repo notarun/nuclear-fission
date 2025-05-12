@@ -56,16 +56,13 @@ local function Entity(args)
   if args.load then args.load(ctx) end
   world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
 
-  local function emit(...)
-    -- compatibility with lume's each method, since it passes self as first arg
-    local params = { ... }
-    if type(params[1]) == "table" then params = lume.slice(params, 2) end
-    local ev = params[1]
-
+  local function emit(ev, ...)
     validate({ ev = { value = ev, type = "string" } })
+
     local err = string.format("Invalid event key, val = %s", ev)
     assert(args.events[ev], err)
-    args.events[ev](ctx, unpack(lume.slice(params, 2)))
+
+    args.events[ev](ctx, ...)
   end
 
   local function update(dt)
