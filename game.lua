@@ -10,7 +10,7 @@ local state = require("state")
 local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
-local entities = {}
+local entities, coro, splitTime = {}, nil, 0.2
 
 local function neutronsInCell(i, j)
   return lume.chain(entities):filter(function(e)
@@ -45,14 +45,15 @@ local function Neutron(data)
     vibeMag = mag
   end
 
-  local function split(ctx, pld)
+  local function split(ctx, pld, oncomplete)
     local n = pld.neighbors[data.idx]
     local cx, cy, cw, ch = cellPosAndSz(n.i, n.j)
     flux
-      .to(ctx, 0.1, { x = cx + cw / 2, y = cy + ch / 2 })
+      .to(ctx, splitTime, { x = cx + cw / 2, y = cy + ch / 2 })
       :ease("linear")
       :oncomplete(function()
         ctx.dead = true
+        if oncomplete then oncomplete() end
       end)
     moving = true
   end
@@ -87,14 +88,22 @@ local function Neutron(data)
   })
 end
 
-local function fuseOrSplit(i, j)
-  state.fuseOrSplit(i, j, state.playing().idx, function(ev, pld)
-    if ev == "add" then
-      lume.push(entities, Neutron(pld))
-    elseif ev == "split" then
-      neutronsInCell(i, j):each("emit", "split", pld)
+local function fuseOrSplitCb(ev, pld)
+  if ev == "add" then
+    lume.push(entities, Neutron(pld))
+  elseif ev == "split" then
+    local i, j, active = pld.self.i, pld.self.j, #pld.neighbors
+
+    local oncomplete = function()
+      active = active - 1
+      if active == 0 and coro and coroutine.status(coro) == "suspended" then
+        coroutine.resume(coro)
+      end
     end
-  end)
+
+    neutronsInCell(i, j):each("emit", "split", pld, oncomplete)
+    coroutine.yield()
+  end
 end
 
 local function Cell(i, j)
@@ -113,8 +122,11 @@ local function Cell(i, j)
       if owner and owner ~= playing then
         toast.show("This cell is owned by other player")
       else
-        fuseOrSplit(i, j)
-        state.nextMove()
+        coro = coroutine.create(function()
+          state.fuseOrSplit(i, j, state.playing().idx, fuseOrSplitCb)
+          state.nextMove()
+        end)
+        coroutine.resume(coro)
       end
     end
 
