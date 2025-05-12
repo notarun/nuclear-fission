@@ -8,6 +8,14 @@ out/nuclear-fission.love: $(LUA_FILES)
 dev:
 	@love .
 
+.PHONY: lint
+lint:
+	@luacheck *.lua
+
+
 .PHONY: fmt
 fmt:
 	@stylua .
+
+.PHONY: tidy
+tidy: lint fmt
