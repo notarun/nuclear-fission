@@ -157,6 +157,9 @@ local function fuseOrSplit(i, j, owner, cb)
 
     for _, n in lume.ripairs(neighbors) do
       cb("capture", { self = { i = n.i, j = n.j }, by = owner })
+    end
+
+    for _, n in lume.ripairs(neighbors) do
       fuseOrSplit(n.i, n.j, owner, cb)
     end
   end

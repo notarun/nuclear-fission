@@ -49,9 +49,8 @@ local function Entity(args)
     ["args.tags"] = { value = args.events, type = "table" },
   })
 
-  local itm = { id = lume.uuid() }
-  local ctx =
-    lume.merge(args.data, { item = itm, tags = args.tags, dead = false })
+  local itm = { id = args.tags.id, tags = args.tags }
+  local ctx = lume.merge(args.data, { item = itm, dead = false })
 
   if args.load then args.load(ctx) end
   world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
@@ -93,8 +92,8 @@ local function Scene(args)
 
   local function update(dt)
     for i, e in lume.ripairs(args.entities) do
-      if e.update then e.update(dt) end
       if e.ctx.dead then table.remove(args.entities, i) end
+      if e.update then e.update(dt) end
     end
   end
 
