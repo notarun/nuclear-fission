@@ -30,8 +30,7 @@ local function cellPosAndSz(i, j)
   return x, y, w, h
 end
 
-local function Neutron(data)
-  local i, j = data.self.i, data.self.j
+local function Neutron(i, j, idx)
   local cell = state.cell(i, j)
   local color, vibeMag, moving = cell.ownedBy.color, 0, false
 
@@ -51,7 +50,7 @@ local function Neutron(data)
   end
 
   local function split(ctx, pld, oncomplete)
-    local n = pld.neighbors[data.idx]
+    local n = pld.neighbors[idx]
     local cx, cy, cw, ch = cellPosAndSz(n.i, n.j)
     flux
       .to(ctx, splitTime, { x = cx + cw / 2, y = cy + ch / 2 })
@@ -73,7 +72,7 @@ local function Neutron(data)
 
     load(ctx)
 
-    local dir = dirs[cell.count] and dirs[cell.count][data.idx]
+    local dir = dirs[cell.count] and dirs[cell.count][idx]
     if dir then
       ctx.x, ctx.y = ctx.x + dir[1], ctx.y + dir[2]
       color = cell.ownedBy.color
@@ -98,7 +97,7 @@ local function fuseOrSplitCb(ev, pld)
   local neutrons = neutronsInCell(i, j)
 
   if ev == "add" then
-    lume.push(entities, Neutron(pld))
+    lume.push(entities, Neutron(i, j, pld.idx))
   elseif ev == "capture" then
     fn.each(neutrons, "emit", "capture", pld.by)
   elseif ev == "split" then
