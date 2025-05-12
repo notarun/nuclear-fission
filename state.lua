@@ -121,6 +121,13 @@ local function playing()
   return { idx = idx, player = _state.players[idx] }
 end
 
+local function player(idx)
+  core.validate({
+    idx = { value = idx, type = "number", min = 1, max = #_state.players },
+  })
+  return { idx = idx, player = _state.players[idx] }
+end
+
 local function fuseOrSplit(i, j, owner, cb)
   cb = cb or function(e, d)
     require("dump")({ ev = e, data = d })
@@ -149,6 +156,7 @@ local function fuseOrSplit(i, j, owner, cb)
     cl.owner = nil
 
     for _, n in ipairs(neighbors) do
+      cb("capture", { self = { i = n.i, j = n.j }, by = owner })
       fuseOrSplit(n.i, n.j, owner, cb)
     end
   end
@@ -158,6 +166,7 @@ return {
   init = init,
   cell = cell,
   winner = winner,
+  player = player,
   playing = playing,
   nextMove = nextMove,
   fuseOrSplit = fuseOrSplit,
