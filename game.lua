@@ -32,6 +32,7 @@ end
 
 local function Neutron(i, j, idx)
   local cell = state.cell(i, j)
+  local tag = sf("cell:%s-%s", i, j)
   local color, vibeMag, moving = cell.ownedBy.color, 0, false
 
   local dirs = {
@@ -71,7 +72,7 @@ local function Neutron(i, j, idx)
         .chain(cols)
         :filter(function(c)
           local isNeutron = lume.find(c.other.tags, "neutron")
-          local isSibling = lume.find(c.other.tags, sf("cell-%s-%s", i, j))
+          local isSibling = lume.find(c.other.tags, tag)
           return isNeutron and not isSibling
         end)
         :each(function()
@@ -97,7 +98,7 @@ local function Neutron(i, j, idx)
     load = load,
     draw = draw,
     update = update,
-    tags = { "neutron", sf("cell:%s-%s", i, j) },
+    tags = { "neutron", tag },
     events = {
       split = split,
       vibrate = vibrate,
