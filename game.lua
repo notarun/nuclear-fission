@@ -115,6 +115,15 @@ local function fuseOrSplitCb(ev, pld)
   end
 end
 
+local function fuseOrSplit(i, j, playing, cb)
+  coro = coroutine.create(function()
+    state.fuseOrSplit(i, j, playing, fuseOrSplitCb)
+    coro = nil
+    cb()
+  end)
+  coroutine.resume(coro)
+end
+
 local function Cell(i, j)
   local function update(_, ctx)
     local winner = state.winner()
@@ -131,12 +140,7 @@ local function Cell(i, j)
       if owner and owner ~= playing then
         toast.show("This cell is owned by other player")
       else
-        coro = coroutine.create(function()
-          state.fuseOrSplit(i, j, state.playing().idx, fuseOrSplitCb)
-          coro = nil
-          state.nextMove()
-        end)
-        coroutine.resume(coro)
+        fuseOrSplit(i, j, state.playing().idx, state.nextMove)
       end
     end
 
