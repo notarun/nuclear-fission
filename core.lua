@@ -1,7 +1,7 @@
 local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
-local lg, unpack = love.graphics, unpack or table.unpack
+local lg = love.graphics
 local world, _scenes = bump.newWorld(), {}
 
 local function validate(tb)
