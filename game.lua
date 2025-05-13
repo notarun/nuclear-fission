@@ -2,6 +2,7 @@ local flux = require("3rd.flux.flux")
 local lume = require("3rd.lume.lume")
 local toast = require("3rd.toasts.lovelyToasts")
 
+local res = require("res")
 local core = require("core")
 local drw = require("draw")
 local fn = require("fn")
@@ -116,6 +117,8 @@ local function fuseOrSplitCb(ev, pld)
   elseif ev == "capture" then
     fn.each(neutrons, "emit", "capture", pld.by)
   elseif ev == "split" then
+    res.sound.plasma:play()
+
     local active = #pld.neighbors
 
     local oncomplete = function()

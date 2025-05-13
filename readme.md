@@ -15,4 +15,5 @@ make fmt  # Formats code using Stylua
 
 ## resources
 
-- [monogram font](https://datagoblin.itch.io/monogram)
+- [monogram by datagoblin](https://datagoblin.itch.io/monogram)
+- [Weapons Plasma Shot 03 by unfa](https://freesound.org/s/584195/)
