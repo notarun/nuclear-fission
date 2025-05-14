@@ -64,6 +64,7 @@ local function Neutron(i, j, idx)
   local function load(ctx)
     local cx, cy, cw, ch = cellPosAndSz(i, j)
     ctx.x, ctx.y = cx + cw / 2, cy + ch / 2
+    ctx.w, ctx.h = 18, 18
   end
 
   local function update(_, ctx)
