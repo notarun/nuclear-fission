@@ -1,7 +1,7 @@
 local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
-local lg = love.graphics
+local lg, sf = love.graphics, string.format
 local world, _scenes = bump.newWorld(), {}
 
 local function validate(tb)
@@ -11,22 +11,22 @@ local function validate(tb)
   for k, v in pairs(tb) do
     local keys = lume.keys(v)
 
-    err = string.format("Required key `value` not found in `table.%s`", k)
+    err = sf("Required key `value` not found in `table.%s`", k)
     assert(lume.find(keys, "value"), err)
 
-    err = string.format("Required key `type` not found in `table.%s`", k)
+    err = sf("Required key `type` not found in `table.%s`", k)
     assert(lume.find(keys, "type"), err)
 
-    err = string.format("Invalid %s `%s`, val = %s", v.type, k, v.value)
+    err = sf("Invalid %s `%s`, val = %s", v.type, k, tostring(v.value))
     assert(type(v.value) == v.type, err)
 
     if v.min then
-      err = string.format("%s must be >= %s, val = %s", k, v.min, v.value)
+      err = sf("%s must be >= %s, val = %s", k, v.min, v.value)
       assert(v.value >= v.min, err)
     end
 
     if v.max then
-      err = string.format("%s must be <= %s, val = %s", k, v.max, v.value)
+      err = sf("%s must be <= %s, val = %s", k, v.max, v.value)
       assert(v.value <= v.max, err)
     end
   end
@@ -58,7 +58,7 @@ local function Entity(args)
   local function emit(ev, ...)
     validate({ ev = { value = ev, type = "string" } })
 
-    local err = string.format("Invalid event key, val = %s", ev)
+    local err = sf("Invalid event key, val = %s", ev)
     assert(args.events[ev], err)
 
     args.events[ev](ctx, ...)
@@ -125,7 +125,7 @@ local function goToScene(id, args)
     args = { value = args, type = "table" },
   })
 
-  local err = string.format("Invalid scene id, val = %s", id)
+  local err = sf("Invalid scene id, val = %s", id)
   assert(_scenes[id], err)
 
   if _scenes.current then _scenes.current.leave(args) end
