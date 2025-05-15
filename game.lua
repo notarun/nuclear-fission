@@ -2,11 +2,11 @@ local flux = require("3rd.flux.flux")
 local lume = require("3rd.lume.lume")
 local toast = require("3rd.toasts.lovelyToasts")
 
-local res = require("res")
 local core = require("core")
 local drw = require("draw")
 local fn = require("fn")
 local input = require("input")
+local res = require("res")
 local state = require("state")
 
 local lg, lm = love.graphics, love.mouse

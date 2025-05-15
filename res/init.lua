@@ -9,6 +9,6 @@ return {
     md = lg.newFont(FONT_MONOGRAM_TTF, 32),
   },
   sound = {
-    plasma = la.newSource(SOUND_PLASMA_FLAC, "static")
-  }
+    plasma = la.newSource(SOUND_PLASMA_FLAC, "static"),
+  },
 }
