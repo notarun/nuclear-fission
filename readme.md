@@ -2,7 +2,7 @@
 
 A pass-and-play, grid-based strategy game inspired by the original [Chain Reaction](https://play.google.com/store/apps/details?id=com.BuddyMattEnt.ChainReaction&hl=en_IN).
 
-> ⚠️  **Work in progress, expect bugs**
+> ⚠️ **Work in progress, expect bugs**
 
 ## setup
 
