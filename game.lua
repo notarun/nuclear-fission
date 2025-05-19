@@ -12,7 +12,8 @@ local state = require("state")
 local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
-local entities, coro, splitTime = {}, nil, 0.2
+local entities, splitTime = {}, 0.2
+local splitting = false
 
 local function neutronsInCell(i, j)
   return lume.filter(entities, function(e)
@@ -68,20 +69,22 @@ local function Neutron(i, j, idx)
   end
 
   local function update(_, ctx)
-    if moving then
-      local _, _, cols = core.world:check(ctx.item, ctx.x, ctx.y)
-      lume
-        .chain(cols)
-        :filter(function(c)
-          local isNeutron = lume.find(c.other.tags, "neutron")
-          local isSibling = lume.find(c.other.tags, tag)
-          return isNeutron and not isSibling
-        end)
-        :each(function()
-          ctx.dead = true
-        end)
-      return
-    end
+    if moving then return end
+
+    -- if moving then
+    --   local _, _, cols = core.world:check(ctx.item, ctx.x, ctx.y)
+    --   lume
+    --     .chain(cols)
+    --     :filter(function(c)
+    --       local isNeutron = lume.find(c.other.tags, "neutron")
+    --       local isSibling = lume.find(c.other.tags, tag)
+    --       return isNeutron and not isSibling
+    --     end)
+    --     :each(function()
+    --       ctx.dead = true
+    --     end)
+    --   return
+    -- end
 
     load(ctx)
 
@@ -109,59 +112,58 @@ local function Neutron(i, j, idx)
   })
 end
 
-local function fuseOrSplitCb(ev, pld)
-  local i, j = pld.self.i, pld.self.j
-  local neutrons = neutronsInCell(i, j)
+-- local function fuseOrSplitCb(ev, pld)
+--   local i, j = pld.self.i, pld.self.j
+--   local neutrons = neutronsInCell(i, j)
+--
+--   if ev == "add" then
+--     lume.push(entities, Neutron(i, j, pld.idx))
+--   elseif ev == "capture" then
+--     fn.each(neutrons, "emit", "capture", pld.by)
+--   elseif ev == "split" then
+--     res.sound.plasma:play()
+--
+--     local active = #pld.neighbors
+--
+--     local oncomplete = function()
+--       active = active - 1
+--       if active == 0 and coro and coroutine.status(coro) == "suspended" then
+--         coroutine.resume(coro)
+--       end
+--     end
+--
+--     fn.each(neutrons, "emit", "split", pld, oncomplete)
+--     coroutine.yield()
+--   end
+-- end
 
-  if ev == "add" then
-    lume.push(entities, Neutron(i, j, pld.idx))
-  elseif ev == "capture" then
-    fn.each(neutrons, "emit", "capture", pld.by)
-  elseif ev == "split" then
-    res.sound.plasma:play()
-
-    local active = #pld.neighbors
-
-    local oncomplete = function()
-      active = active - 1
-      if active == 0 and coro and coroutine.status(coro) == "suspended" then
-        coroutine.resume(coro)
-      end
-    end
-
-    fn.each(neutrons, "emit", "split", pld, oncomplete)
-    coroutine.yield()
-  end
-end
-
-local function fuseOrSplit(i, j, playing, cb)
-  coro = coroutine.create(function()
-    state.fuseOrSplit(i, j, playing, fuseOrSplitCb)
-    coro = nil
-    cb()
-  end)
-  coroutine.resume(coro)
-end
+-- local function fuseOrSplit(i, j, playing, cb)
+--   coro = coroutine.create(function()
+--     state.fuseOrSplit(i, j, playing, fuseOrSplitCb)
+--     coro = nil
+--     cb()
+--   end)
+--   coroutine.resume(coro)
+-- end
 
 local function Cell(i, j)
+  local animating, tween, neutronCount = true, nil, 0
+
   local function update(_, ctx)
     ctx.x, ctx.y, ctx.w, ctx.h = cellPosAndSz(i, j)
 
     local items = core.world:queryPoint(lm.getPosition())
     local hovering = lume.find(items, ctx.item) ~= nil
 
-    if not coro and hovering and input:pressed("click") then
+    if not animating and hovering and input:pressed("click") then
       local owner, playing = state.cell(i, j).owner, state.playing().idx
 
       if owner and owner ~= playing then
         toast.show("This cell is owned by other player")
       else
-        fuseOrSplit(i, j, state.playing().idx, function()
-          if state.winner() then
-            core.goToScene("menu", { mode = "result" })
-          end
-          state.nextMove()
-        end)
+        state.fuse(i, j, state.playing().idx)
+
+        -- animating = true
       end
     end
 
