@@ -12,15 +12,32 @@ local state = require("state")
 local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
-local entities, splitTime = {}, 0.2
-local splitting = false
+local entities = {}
+local animating, f = false, nil
 
-local function neutronsInCell(i, j)
+local function entitiesWhereTag(tags)
   return lume.filter(entities, function(e)
-    local isNeutron = lume.find(e.ctx.item.tags, "neutron")
-    local inSameCell = lume.find(e.ctx.item.tags, sf("cell:%s-%s", i, j))
-    return isNeutron and inSameCell
+    return lume.all(tags, function(tag)
+      return lume.find(e.ctx.item.tags, tag)
+    end)
   end)
+end
+
+local function populateAnimationQueue(oncomplete)
+  local splittables = state.splittables()
+  for _, s in ipairs(splittables) do
+    local e = entitiesWhereTag({ "neutrons", sf("cell:%s-%s", s.i, s.j) })[1]
+    if not e then goto continue end
+
+    if not f then
+      fn.dump(e.ctx)
+      -- f = flux.to(e.ctx, 0.2, { w = 32, h = 32 })
+    end
+
+    ::continue::
+  end
+
+  oncomplete()
 end
 
 local function cellPosAndSz(i, j)
@@ -32,35 +49,14 @@ local function cellPosAndSz(i, j)
   return x, y, w, h
 end
 
-local function Neutron(i, j, idx)
-  local cell = state.cell(i, j)
-  local tag = sf("cell:%s-%s", i, j)
-  local color, vibeMag, moving = cell.ownedBy.color, 0, false
-
+local function Neutrons(i, j)
+  local neutrons = {}
   local dirs = {
-    { { 0, 0 }, { 0, 0 } },
+    { { 0, 0 } },
     { { -10, 0 }, { 10, 0 } },
     { { -10, -4 }, { 0, 6 }, { 10, -4 } },
     { { -10, 0 }, { 0, -10 }, { 0, 10 }, { 10, 0 } },
   }
-
-  local function vibrate(_, mag)
-    vibeMag = mag
-  end
-
-  local function capture(_, by)
-    color = state.player(by).player.color
-  end
-
-  local function split(ctx, pld, oncomplete)
-    local n = pld.neighbors[idx]
-    local cx, cy, cw, ch = cellPosAndSz(n.i, n.j)
-    flux
-      .to(ctx, splitTime, { x = cx + cw / 2, y = cy + ch / 2 })
-      :ease("linear")
-      :oncomplete(oncomplete)
-    moving = true
-  end
 
   local function load(ctx)
     local cx, cy, cw, ch = cellPosAndSz(i, j)
@@ -69,86 +65,34 @@ local function Neutron(i, j, idx)
   end
 
   local function update(_, ctx)
-    if moving then return end
+    local cell = state.cell(i, j)
 
-    -- if moving then
-    --   local _, _, cols = core.world:check(ctx.item, ctx.x, ctx.y)
-    --   lume
-    --     .chain(cols)
-    --     :filter(function(c)
-    --       local isNeutron = lume.find(c.other.tags, "neutron")
-    --       local isSibling = lume.find(c.other.tags, tag)
-    --       return isNeutron and not isSibling
-    --     end)
-    --     :each(function()
-    --       ctx.dead = true
-    --     end)
-    --   return
-    -- end
-
-    load(ctx)
-
-    local dir = dirs[cell.count] and dirs[cell.count][idx]
-    if dir then
-      ctx.x, ctx.y = ctx.x + dir[1], ctx.y + dir[2]
-      color = cell.ownedBy.color
+    for idx = 1, cell.count do
+      local dir = dirs[cell.count][idx]
+      neutrons[idx] = { x = ctx.x + dir[1], y = ctx.y + dir[2] }
     end
+
+    local threshold = #state.cellNeighbors(i, j) - 1
+    ctx.vibration = state.cell(i, j).count < threshold and 0 or 0.1
+
+    if cell.ownedBy then ctx.color = cell.ownedBy.color end
   end
 
   local function draw(ctx)
-    drw.neutron(ctx.x, ctx.y, color, vibeMag)
+    for _, n in ipairs(neutrons) do
+      drw.neutron(n.x, n.y, ctx.color, ctx.vibration)
+    end
   end
 
   return core.Entity({
     load = load,
     draw = draw,
     update = update,
-    tags = { "neutron", tag },
-    events = {
-      split = split,
-      vibrate = vibrate,
-      capture = capture,
-    },
+    tags = { "neutrons", sf("cell:%s-%s", i, j) },
   })
 end
 
--- local function fuseOrSplitCb(ev, pld)
---   local i, j = pld.self.i, pld.self.j
---   local neutrons = neutronsInCell(i, j)
---
---   if ev == "add" then
---     lume.push(entities, Neutron(i, j, pld.idx))
---   elseif ev == "capture" then
---     fn.each(neutrons, "emit", "capture", pld.by)
---   elseif ev == "split" then
---     res.sound.plasma:play()
---
---     local active = #pld.neighbors
---
---     local oncomplete = function()
---       active = active - 1
---       if active == 0 and coro and coroutine.status(coro) == "suspended" then
---         coroutine.resume(coro)
---       end
---     end
---
---     fn.each(neutrons, "emit", "split", pld, oncomplete)
---     coroutine.yield()
---   end
--- end
-
--- local function fuseOrSplit(i, j, playing, cb)
---   coro = coroutine.create(function()
---     state.fuseOrSplit(i, j, playing, fuseOrSplitCb)
---     coro = nil
---     cb()
---   end)
---   coroutine.resume(coro)
--- end
-
 local function Cell(i, j)
-  local animating, tween, neutronCount = true, nil, 0
-
   local function update(_, ctx)
     ctx.x, ctx.y, ctx.w, ctx.h = cellPosAndSz(i, j)
 
@@ -162,14 +106,9 @@ local function Cell(i, j)
         toast.show("This cell is owned by other player")
       else
         state.fuse(i, j, state.playing().idx)
-
-        -- animating = true
+        populateAnimationQueue(state.nextMove)
       end
     end
-
-    local threshold = #state.cellNeighbors(i, j) - 1
-    local magnitude = state.cell(i, j).count < threshold and 0 or 0.1
-    fn.each(neutronsInCell(i, j), "emit", "vibrate", magnitude)
   end
 
   local function draw(ctx)
@@ -188,7 +127,7 @@ return core.Scene({
     local rows, cols = state.matrixDimensions()
     for i = 1, rows do
       for j = 1, cols do
-        lume.push(entities, Cell(i, j))
+        lume.push(entities, Cell(i, j), Neutrons(i, j))
       end
     end
   end,

@@ -61,7 +61,7 @@ local function Entity(args)
     local err = sf("Invalid event key, val = %s", ev)
     assert(args.events[ev], err)
 
-    args.events[ev](ctx, ...)
+    return args.events[ev](ctx, ...)
   end
 
   local function update(dt)

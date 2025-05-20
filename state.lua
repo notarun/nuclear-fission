@@ -146,7 +146,7 @@ local function splittables()
     for j = 1, col do
       local neighbors = cellNeighbors(i, j)
       if cell(i, j).count == #neighbors then
-        table.insert(t, { i, j })
+        table.insert(t, { i = i, j = j, neighbors = neighbors })
       end
     end
   end
