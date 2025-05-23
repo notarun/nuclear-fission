@@ -14,6 +14,7 @@ local sf = string.format
 
 local entities = {}
 local animating, f = false, nil
+local speed = 2
 
 local function entitiesWhereTag(tags)
   return lume.filter(entities, function(e)
@@ -50,13 +51,15 @@ local function cellPosAndSz(i, j)
 end
 
 local function Neutrons(i, j)
-  local neutrons = {}
-  local dirs = {
+  local splitting, vibration = false, false
+  local count, neutrons = 0, {}
+  local offsets = {
     { { 0, 0 } },
     { { -10, 0 }, { 10, 0 } },
     { { -10, -4 }, { 0, 6 }, { 10, -4 } },
     { { -10, 0 }, { 0, -10 }, { 0, 10 }, { 10, 0 } },
   }
+  local directions = { { 0, 10 }, { 10, 0 }, { 0, -10 }, { -10, 0 } }
 
   local function load(ctx)
     local cx, cy, cw, ch = cellPosAndSz(i, j)
@@ -64,23 +67,37 @@ local function Neutrons(i, j)
     ctx.w, ctx.h = 18, 18
   end
 
-  local function update(_, ctx)
+  -- local function split(ctx, onfinish)
+  -- end
+
+  local function update(dt, ctx)
     local cell = state.cell(i, j)
 
-    for idx = 1, cell.count do
-      local dir = dirs[cell.count][idx]
-      neutrons[idx] = { x = ctx.x + dir[1], y = ctx.y + dir[2] }
+    if cell.ownedBy then ctx.color = cell.ownedBy.color end
+
+    if count ~= cell.count then
+      count = cell.count
+
+      for idx = 1, count do
+        local offset = offsets[count][idx]
+        neutrons[idx] = { x = ctx.x + offset[1], y = ctx.y + offset[2] }
+      end
     end
 
     local threshold = #state.cellNeighbors(i, j) - 1
-    ctx.vibration = state.cell(i, j).count < threshold and 0 or 0.1
+    vibration = count < threshold and 0 or 0.1
 
-    if cell.ownedBy then ctx.color = cell.ownedBy.color end
+    if splitting then
+      for idx = 1, count do
+        neutrons[idx].x = neutrons[idx].x + directions[idx].x * speed * dt
+        neutrons[idx].y = neutrons[idx].y + directions[idx].y * speed * dt
+      end
+    end
   end
 
   local function draw(ctx)
     for _, n in ipairs(neutrons) do
-      drw.neutron(n.x, n.y, ctx.color, ctx.vibration)
+      drw.neutron(n.x, n.y, ctx.color, vibration)
     end
   end
 
@@ -88,6 +105,7 @@ local function Neutrons(i, j)
     load = load,
     draw = draw,
     update = update,
+    -- events = { split = split },
     tags = { "neutrons", sf("cell:%s-%s", i, j) },
   })
 end
