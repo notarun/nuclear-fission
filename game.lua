@@ -13,8 +13,7 @@ local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
 local entities = {}
-local animating, f = false, nil
-local speed = 2
+local animating, animationTime = false, 0.4
 
 local function entitiesWhereTag(tags)
   return lume.filter(entities, function(e)
@@ -24,21 +23,24 @@ local function entitiesWhereTag(tags)
   end)
 end
 
-local function populateAnimationQueue(oncomplete)
+local function splitAll(oncomplete)
+  animating = true
+
   local splittables = state.splittables()
-  for _, s in ipairs(splittables) do
-    local e = entitiesWhereTag({ "neutrons", sf("cell:%s-%s", s.i, s.j) })[1]
-    if not e then goto continue end
-
-    if not f then
-      fn.dump(e.ctx)
-      -- f = flux.to(e.ctx, 0.2, { w = 32, h = 32 })
-    end
-
-    ::continue::
+  if #splittables == 0 then
+    oncomplete()
+    animating = false
+    return
   end
 
-  oncomplete()
+  for _, s in ipairs(splittables) do
+    local e = entitiesWhereTag({ "neutrons", sf("cell:%s-%s", s.i, s.j) })[1]
+    e.emit("split", s.neighbors)
+  end
+
+  flux.to({}, animationTime * 2, {}):oncomplete(function()
+    splitAll(oncomplete)
+  end)
 end
 
 local function cellPosAndSz(i, j)
@@ -51,7 +53,7 @@ local function cellPosAndSz(i, j)
 end
 
 local function Neutrons(i, j)
-  local splitting, vibration = false, false
+  local vibration = false
   local count, neutrons = 0, {}
   local offsets = {
     { { 0, 0 } },
@@ -59,7 +61,6 @@ local function Neutrons(i, j)
     { { -10, -4 }, { 0, 6 }, { 10, -4 } },
     { { -10, 0 }, { 0, -10 }, { 0, 10 }, { 10, 0 } },
   }
-  local directions = { { 0, 10 }, { 10, 0 }, { 0, -10 }, { -10, 0 } }
 
   local function load(ctx)
     local cx, cy, cw, ch = cellPosAndSz(i, j)
@@ -67,32 +68,44 @@ local function Neutrons(i, j)
     ctx.w, ctx.h = 18, 18
   end
 
-  -- local function split(ctx, onfinish)
-  -- end
-
-  local function update(dt, ctx)
+  local function arrangeNeutrons(ctx)
     local cell = state.cell(i, j)
-
-    if cell.ownedBy then ctx.color = cell.ownedBy.color end
 
     if count ~= cell.count then
       count = cell.count
-
       for idx = 1, count do
         local offset = offsets[count][idx]
         neutrons[idx] = { x = ctx.x + offset[1], y = ctx.y + offset[2] }
       end
     end
+  end
 
+  local function split(ctx, neighbors)
+    arrangeNeutrons(ctx)
+    res.sound.plasma:play()
+
+    for idx, n in ipairs(neighbors) do
+      local cx, cy, cw, ch = cellPosAndSz(n.i, n.j)
+      local tx, ty = cx + cw / 2, cy + ch / 2
+      flux
+        .to(neutrons[idx], animationTime, { x = tx, y = ty })
+        :oncomplete(function()
+          state.split(i, j)
+          ctx.dead = true
+          state.fuse(n.i, n.j, state.playing().idx)
+
+          fn.dump(neutrons)
+        end)
+    end
+  end
+
+  local function update(_, ctx)
+    arrangeNeutrons(ctx)
+
+    local cell = state.cell(i, j)
+    if cell.ownedBy then ctx.color = cell.ownedBy.color end
     local threshold = #state.cellNeighbors(i, j) - 1
     vibration = count < threshold and 0 or 0.1
-
-    if splitting then
-      for idx = 1, count do
-        neutrons[idx].x = neutrons[idx].x + directions[idx].x * speed * dt
-        neutrons[idx].y = neutrons[idx].y + directions[idx].y * speed * dt
-      end
-    end
   end
 
   local function draw(ctx)
@@ -105,7 +118,7 @@ local function Neutrons(i, j)
     load = load,
     draw = draw,
     update = update,
-    -- events = { split = split },
+    events = { split = split },
     tags = { "neutrons", sf("cell:%s-%s", i, j) },
   })
 end
@@ -124,7 +137,7 @@ local function Cell(i, j)
         toast.show("This cell is owned by other player")
       else
         state.fuse(i, j, state.playing().idx)
-        populateAnimationQueue(state.nextMove)
+        splitAll(state.nextMove)
       end
     end
   end

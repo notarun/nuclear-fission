@@ -138,6 +138,13 @@ local function fuse(i, j, owner)
   cl.owner = owner
 end
 
+local function split(i, j)
+  validateCell(i, j)
+  local cl = cell(i, j)
+  cl.count = cl.count - 1
+  if cl.count == 0 then cl.owner = nil end
+end
+
 local function splittables()
   local t = {}
   local row, col = matrixDimensions()
@@ -158,6 +165,7 @@ return {
   init = init,
   cell = cell,
   fuse = fuse,
+  split = split,
   winner = winner,
   player = player,
   playing = playing,
