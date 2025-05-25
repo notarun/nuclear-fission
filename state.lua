@@ -11,8 +11,8 @@ local _state = {
 
 local colors = {
   Color.LavenderIndigo,
-  Color.Turquoise,
   Color.FireOpal,
+  Color.Turquoise,
   Color.Kiwi,
 }
 
@@ -128,51 +128,49 @@ local function player(idx)
   return { idx = idx, player = _state.players[idx] }
 end
 
-local function fuseOrSplit(i, j, owner, cb)
-  cb = cb or function(e, d)
-    require("fn").dump({ ev = e, data = d })
-  end
-
+local function fuse(i, j, owner)
   validateCell(i, j)
   core.validate({
-    cb = { value = cb, type = "function" },
     owner = { value = owner, type = "number", min = 1, max = #_state.players },
   })
-
   local cl = cell(i, j)
-  local neighbors = cellNeighbors(i, j)
+  cl.count = cl.count + 1
+  cl.owner = owner
+end
 
-  if cl.count < #neighbors then
-    local count = cl.count + 1
-    cl.count = count
-    cl.owner = owner
-    cb("add", { self = { i = i, j = j }, idx = count })
+local function defuse(i, j)
+  validateCell(i, j)
+  local cl = cell(i, j)
+  cl.count = cl.count - 1
+  if cl.count == 0 then cl.owner = nil end
+end
+
+local function splittables()
+  local t = {}
+  local row, col = matrixDimensions()
+
+  for i = 1, row do
+    for j = 1, col do
+      local neighbors = cellNeighbors(i, j)
+      if cell(i, j).count >= #neighbors then
+        table.insert(t, { i = i, j = j, neighbors = neighbors })
+      end
+    end
   end
 
-  if cl.count == #neighbors then
-    cb("split", { self = { i = i, j = j }, neighbors = neighbors })
-
-    cl.count = 0
-    cl.owner = nil
-
-    for _, n in lume.ripairs(neighbors) do
-      cb("capture", { self = { i = n.i, j = n.j }, by = owner })
-    end
-
-    for _, n in lume.ripairs(neighbors) do
-      fuseOrSplit(n.i, n.j, owner, cb)
-    end
-  end
+  return t
 end
 
 return {
   init = init,
   cell = cell,
+  fuse = fuse,
+  defuse = defuse,
   winner = winner,
   player = player,
   playing = playing,
   nextMove = nextMove,
-  fuseOrSplit = fuseOrSplit,
+  splittables = splittables,
   cellNeighbors = cellNeighbors,
   matrixDimensions = matrixDimensions,
 }
