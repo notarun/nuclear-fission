@@ -117,6 +117,15 @@ local function RightButton(label, fn)
   return core.Entity({ update = update, draw = draw })
 end
 
+local function Escape()
+  local function update(_, _)
+    if input:pressed("back") then
+      le.quit(0)
+    end
+  end
+  return core.Entity({ update = update })
+end
+
 return (function()
   local s = {
     heading = {
@@ -156,6 +165,7 @@ return (function()
 
       lume.push(
         entities,
+        Escape(),
         Heading(s.heading.title, s.heading.nColor),
         LeftButton(s.leftBtn.label, s.leftBtn.fn),
         RightButton(s.rightBtn.label, s.rightBtn.fn)

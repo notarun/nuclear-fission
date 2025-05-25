@@ -1,5 +1,7 @@
 local lume = require("3rd.lume.lume")
 
+local function noop() end
+
 local function dump(val)
   print(lume.serialize(val))
 end
@@ -27,4 +29,4 @@ local function each(t, fn, ...)
   return t
 end
 
-return { dump = dump, getiter = getiter, each = each }
+return { noop = noop, dump = dump, getiter = getiter, each = each }
