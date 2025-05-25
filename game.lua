@@ -32,7 +32,11 @@ local function splitAll(nextMove, onWin)
 
   animating = true
 
-  if state.winner() then onWin() end
+  if state.winner() then
+    animating = false
+    onWin()
+    return
+  end
 
   local splittables = state.splittables()
   if #splittables == 0 then
