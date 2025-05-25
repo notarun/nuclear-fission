@@ -4,10 +4,12 @@ local lume = require("3rd.lume.lume")
 local Color = require("color")
 local core = require("core")
 local drw = require("draw")
+local fn = require("fn")
 local input = require("input")
 local res = require("res")
 local state = require("state")
 
+local entities = {}
 local lg, lm, le = love.graphics, love.mouse, love.event
 
 local function Heading(title, nColor)
@@ -37,10 +39,10 @@ local function Heading(title, nColor)
   return core.Entity({ update = update, draw = draw })
 end
 
-local function LeftButton(label, fn)
+local function LeftButton(label, cb)
   core.validate({
     label = { value = label, type = "string" },
-    fn = { value = fn, type = "function" },
+    cb = { value = cb, type = "function" },
   })
 
   local txt = lg.newText(res.font.md, label)
@@ -59,8 +61,8 @@ local function LeftButton(label, fn)
     hovering = lume.find(items, ctx.item) ~= nil
 
     if hovering then
-      if input:pressed("click") then fn() end
       flux.to(zoom, 0.1, { dw = 6, dh = 6 }):ease("backout")
+      if input:pressed("click") then cb() end
     else
       flux.to(zoom, 0.1, { dw = 0, dh = 0 }):ease("backout")
     end
@@ -77,10 +79,10 @@ local function LeftButton(label, fn)
   return core.Entity({ update = update, draw = draw })
 end
 
-local function RightButton(label, fn)
+local function RightButton(label, cb)
   core.validate({
     label = { value = label, type = "string" },
-    fn = { value = fn, type = "function" },
+    cb = { value = cb, type = "function" },
   })
 
   local txt = lg.newText(res.font.md, label)
@@ -99,8 +101,8 @@ local function RightButton(label, fn)
     hovering = lume.find(items, ctx.item) ~= nil
 
     if hovering then
-      if input:pressed("click") then fn() end
       flux.to(zoom, 0.1, { dw = 6, dh = 6 }):ease("backout")
+      if input:pressed("click") then cb() end
     else
       flux.to(zoom, 0.1, { dw = 0, dh = 0 }):ease("backout")
     end
@@ -115,6 +117,18 @@ local function RightButton(label, fn)
   end
 
   return core.Entity({ update = update, draw = draw })
+end
+
+local function PlayerCountSelector()
+  local function update() end
+
+  local function draw() end
+
+  return core.Entity({
+    tags = { "PlayerCountSelector" },
+    update = update,
+    draw = draw,
+  })
 end
 
 local function Escape()
@@ -132,19 +146,21 @@ return (function()
     },
     leftBtn = {
       label = "pass &\nplay",
-      fn = function()
-        core.goToScene("game")
+      cb = function()
+        local entityExists = #fn.entitiesWhereTag(
+          entities,
+          { "PlayerCountSelector" }
+        ) == 1
+        if not entityExists then lume.push(entities, PlayerCountSelector()) end
       end,
     },
     rightBtn = {
       label = "exit  \ngame",
-      fn = function()
+      cb = function()
         le.quit(0)
       end,
     },
   }
-
-  local entities = {}
 
   return core.Scene({
     id = "menu",
@@ -165,8 +181,8 @@ return (function()
         entities,
         Escape(),
         Heading(s.heading.title, s.heading.nColor),
-        LeftButton(s.leftBtn.label, s.leftBtn.fn),
-        RightButton(s.rightBtn.label, s.rightBtn.fn)
+        LeftButton(s.leftBtn.label, s.leftBtn.cb),
+        RightButton(s.rightBtn.label, s.rightBtn.cb)
       )
     end,
     leave = function()

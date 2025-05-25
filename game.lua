@@ -5,6 +5,7 @@ local toast = require("3rd.toasts.lovelyToasts")
 local Color = require("color")
 local core = require("core")
 local drw = require("draw")
+local fn = require("fn")
 local input = require("input")
 local res = require("res")
 local state = require("state")
@@ -15,14 +16,6 @@ local sf = string.format
 
 local entities = {}
 local animating, animationTime = false, 0.2
-
-local function entitiesWhereTag(tags)
-  return lume.filter(entities, function(e)
-    return lume.all(tags, function(tag)
-      return lume.find(e.ctx.item.tags, tag)
-    end)
-  end)
-end
 
 local function splitAll(nextMove, onWin)
   core.validate({
@@ -46,7 +39,10 @@ local function splitAll(nextMove, onWin)
   end
 
   for _, s in ipairs(splittables) do
-    local e = entitiesWhereTag({ "neutrons", sf("cell:%s-%s", s.i, s.j) })[1]
+    local e = fn.entitiesWhereTag(
+      entities,
+      { "neutrons", sf("cell:%s-%s", s.i, s.j) }
+    )[1]
     e.emit("split", s.neighbors)
   end
 
@@ -185,9 +181,9 @@ end
 return core.Scene({
   id = "game",
   entities = entities,
-  enter = function()
+  enter = function(args)
     lume.push(entities, Escape())
-    state.init(12, 6, 2)
+    state.init(12, 6, args.players)
     local rows, cols = state.matrixDimensions()
     for i = 1, rows do
       for j = 1, cols do
