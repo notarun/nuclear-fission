@@ -2,18 +2,19 @@ local flux = require("3rd.flux.flux")
 local lume = require("3rd.lume.lume")
 local toast = require("3rd.toasts.lovelyToasts")
 
+local Color = require("color")
 local core = require("core")
 local drw = require("draw")
-local fn = require("fn")
 local input = require("input")
 local res = require("res")
 local state = require("state")
 
+local debugMode = os.getenv("DEBUG") == "true"
 local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
 local entities = {}
-local animating, animationTime = false, 0.4
+local animating, animationTime = false, 0.3
 
 local function entitiesWhereTag(tags)
   return lume.filter(entities, function(e)
@@ -53,7 +54,7 @@ local function cellPosAndSz(i, j)
 end
 
 local function Neutrons(i, j)
-  local vibration = false
+  local vibration, color = false, nil
   local count, neutrons = 0, {}
   local offsets = {
     { { 0, 0 } },
@@ -73,6 +74,7 @@ local function Neutrons(i, j)
 
     if count ~= cell.count then
       count = cell.count
+      lume.clear(neutrons)
       for idx = 1, count do
         local offset = offsets[count][idx]
         neutrons[idx] = { x = ctx.x + offset[1], y = ctx.y + offset[2] }
@@ -90,27 +92,28 @@ local function Neutrons(i, j)
       flux
         .to(neutrons[idx], animationTime, { x = tx, y = ty })
         :oncomplete(function()
-          state.split(i, j)
-          ctx.dead = true
           state.fuse(n.i, n.j, state.playing().idx)
-
-          fn.dump(neutrons)
+          state.defuse(i, j)
         end)
     end
   end
 
   local function update(_, ctx)
     arrangeNeutrons(ctx)
-
     local cell = state.cell(i, j)
-    if cell.ownedBy then ctx.color = cell.ownedBy.color end
+    if cell.ownedBy then color = cell.ownedBy.color end
     local threshold = #state.cellNeighbors(i, j) - 1
     vibration = count < threshold and 0 or 0.1
   end
 
-  local function draw(ctx)
-    for _, n in ipairs(neutrons) do
-      drw.neutron(n.x, n.y, ctx.color, vibration)
+  local function draw(_)
+    for idx, n in ipairs(neutrons) do
+      drw.neutron(n.x, n.y, color, vibration)
+      if debugMode then
+        local txt = sf("%s/%s\n%s:%s", idx, #neutrons, i, j)
+        lg.setColor(Color.White)
+        lg.print(txt, n.x - 18 / 2, n.y - 18 / 2)
+      end
     end
   end
 
@@ -145,6 +148,12 @@ local function Cell(i, j)
   local function draw(ctx)
     lg.setColor(state.playing().player.color)
     lg.rectangle("line", ctx.x, ctx.y, ctx.w, ctx.h)
+    if debugMode then
+      local cell = state.cell(i, j)
+      local text = sf("c%sp%s\n%s:%s", cell.count, cell.owner or "", i, j)
+      lg.setColor(Color.White)
+      lg.print(text, ctx.x, ctx.y)
+    end
   end
 
   return core.Entity({ update = update, draw = draw })

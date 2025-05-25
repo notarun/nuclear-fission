@@ -11,8 +11,8 @@ local _state = {
 
 local colors = {
   Color.LavenderIndigo,
-  Color.Turquoise,
   Color.FireOpal,
+  Color.Turquoise,
   Color.Kiwi,
 }
 
@@ -138,7 +138,7 @@ local function fuse(i, j, owner)
   cl.owner = owner
 end
 
-local function split(i, j)
+local function defuse(i, j)
   validateCell(i, j)
   local cl = cell(i, j)
   cl.count = cl.count - 1
@@ -165,7 +165,7 @@ return {
   init = init,
   cell = cell,
   fuse = fuse,
-  split = split,
+  defuse = defuse,
   winner = winner,
   player = player,
   playing = playing,
