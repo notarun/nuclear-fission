@@ -50,7 +50,7 @@ local function splitAll(nextMove, onWin)
     e.emit("split", s.neighbors)
   end
 
-  flux.to({}, animationTime * 2, {}):oncomplete(function()
+  flux.to({}, animationTime + (animationTime / 2), {}):oncomplete(function()
     splitAll(nextMove, onWin)
   end)
 end
