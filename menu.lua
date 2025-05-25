@@ -55,12 +55,21 @@ local function Button(opt)
     local vw, vh = lg.getDimensions()
     local tw, th = txt:getDimensions()
 
-    ctx.w, ctx.h = (vw / 4) + zoom.dw, (th * 3) + zoom.dh
-
     if opt.position == "left" then
+      ctx.w, ctx.h = (vw / 4) + zoom.dw, (th * 3) + zoom.dh
       ctx.x, ctx.y = (vw - ctx.w) / 4, (vh - ctx.h) / 2
-    else -- right
+    elseif opt.position == "right" then
+      ctx.w, ctx.h = (vw / 4) + zoom.dw, (th * 3) + zoom.dh
       ctx.x, ctx.y = (vw - ctx.w) / 1.34, (vh - ctx.h) / 2
+    elseif opt.position == "bottom-left" then
+      ctx.w, ctx.h = (vw / 6) + zoom.dw, (th * 1.2) + zoom.dh
+      ctx.x, ctx.y = (vw - ctx.w) / 4, (vh - ctx.h) / 1.5
+    elseif opt.position == "bottom-center" then
+      ctx.w, ctx.h = (vw / 6) + zoom.dw, (th * 1.2) + zoom.dh
+      ctx.x, ctx.y = (vw - ctx.w) / 2, (vh - ctx.h) / 1.5
+    elseif opt.position == "bottom-right" then
+      ctx.w, ctx.h = (vw / 6) + zoom.dw, (th * 1.2) + zoom.dh
+      ctx.x, ctx.y = (vw - ctx.w) / 1.34, (vh - ctx.h) / 1.5
     end
 
     tx, ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 1.2
@@ -81,7 +90,11 @@ local function Button(opt)
     lg.draw(txt, tx, ty)
   end
 
-  return core.Entity({ update = update, draw = draw })
+  return core.Entity({
+    tags = { "button", opt.position },
+    update = update,
+    draw = draw,
+  })
 end
 
 local function Escape()
@@ -92,6 +105,8 @@ local function Escape()
 end
 
 return (function()
+  local hidePlayerSelector = true
+
   local s = {
     heading = {
       title = "nuclear fission",
@@ -100,7 +115,35 @@ return (function()
     leftBtn = {
       label = "pass &\nplay",
       cb = function()
-        core.goToScene("game", { players = 2 })
+        if hidePlayerSelector then
+          lume.push(
+            entities,
+            Button({
+              label = "2P",
+              cb = function()
+                core.goToScene("game", { players = 2 })
+              end,
+              position = "bottom-left",
+              color = Color.LavenderIndigo,
+            }),
+            Button({
+              label = "3P",
+              cb = function()
+                core.goToScene("game", { players = 3 })
+              end,
+              position = "bottom-center",
+              color = Color.LavenderIndigo,
+            }),
+            Button({
+              label = "4P",
+              cb = function()
+                core.goToScene("game", { players = 4 })
+              end,
+              position = "bottom-right",
+              color = Color.LavenderIndigo,
+            })
+          )
+        end
       end,
     },
     rightBtn = {
