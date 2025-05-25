@@ -72,6 +72,8 @@ local function Neutrons(i, j)
     { { -10, 0 }, { 10, 0 } },
     { { -10, -4 }, { 0, 6 }, { 10, -4 } },
     { { -10, 0 }, { 0, -10 }, { 0, 10 }, { 10, 0 } },
+
+    -- handles edge case where count can be greater than 4
     { { -10, 0 }, { 0, -10 }, { 0, 10 }, { 10, 0 }, { 0, 0 } },
   }
 
