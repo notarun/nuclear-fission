@@ -14,7 +14,7 @@ local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
 local entities = {}
-local animating, animationTime = false, 0.25
+local animating, animationTime = false, 0.2
 
 local function entitiesWhereTag(tags)
   return lume.filter(entities, function(e)
@@ -68,6 +68,7 @@ local function Neutrons(i, j)
     { { -10, 0 }, { 10, 0 } },
     { { -10, -4 }, { 0, 6 }, { 10, -4 } },
     { { -10, 0 }, { 0, -10 }, { 0, 10 }, { 10, 0 } },
+    { { -10, 0 }, { 0, -10 }, { 0, 10 }, { 10, 0 }, { 0, 0 } },
   }
 
   local function load(ctx)
