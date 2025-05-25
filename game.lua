@@ -177,9 +177,7 @@ end
 
 local function Escape()
   local function update(_, _)
-    if input:pressed("back") then
-      core.goToScene("menu", { mode = "home" })
-    end
+    if input:pressed("back") then core.goToScene("menu", { mode = "home" }) end
   end
   return core.Entity({ update = update })
 end
