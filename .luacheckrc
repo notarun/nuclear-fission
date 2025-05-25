@@ -1,2 +1,4 @@
-new_globals = { '_', 'love' }
-exclude_files = { '**/.*' }
+return {
+  std = "lua51+love",
+  include_files = { "*.lua", ".luacheckrc", "res/*.lua" }
+}

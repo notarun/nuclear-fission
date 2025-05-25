@@ -1,6 +1,8 @@
 local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
+local fn = require("fn")
+
 local lg, sf = love.graphics, string.format
 local world, _scenes = bump.newWorld(), {}
 
@@ -38,6 +40,7 @@ local function Entity(args)
   args.data.x, args.data.y = args.data.x or 0, args.data.y or 0
   args.data.w, args.data.h = args.data.w or 1, args.data.h or 1
   args.events = args.events or {}
+  args.draw = args.draw or fn.noop
 
   validate({
     ["args.data.x"] = { value = args.data.x, type = "number" },
@@ -75,7 +78,7 @@ local function Entity(args)
 
   local function draw()
     lg.push()
-    args.draw(ctx)
+    if args.draw then args.draw(ctx) end
     lg.pop()
   end
 
@@ -107,6 +110,7 @@ local function Scene(args)
   end
 
   local scene = {
+    id = args.id,
     draw = draw,
     update = update,
     enter = args.enter,

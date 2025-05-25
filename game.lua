@@ -98,7 +98,7 @@ local function Neutrons(i, j)
 
   local function split(ctx, neighbors)
     arrangeNeutrons(ctx)
-    res.sound.plasma:play()
+    res.sound.split:play()
 
     for idx, n in ipairs(neighbors) do
       local cx, cy, cw, ch = cellPosAndSz(n.i, n.j)
@@ -175,10 +175,18 @@ local function Cell(i, j)
   return core.Entity({ update = update, draw = draw })
 end
 
+local function Escape()
+  local function update(_, _)
+    if input:pressed("back") then core.goToScene("menu", { mode = "home" }) end
+  end
+  return core.Entity({ update = update })
+end
+
 return core.Scene({
   id = "game",
   entities = entities,
   enter = function()
+    lume.push(entities, Escape())
     state.init(12, 6, 2)
     local rows, cols = state.matrixDimensions()
     for i = 1, rows do
