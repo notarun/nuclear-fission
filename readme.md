@@ -18,4 +18,4 @@ make tidy  # Lint and formats code using luacheck and stylua
 ## resources
 
 - [monogram by datagoblin](https://datagoblin.itch.io/monogram)
-- [Weapons Plasma Shot 03 by unfa](https://freesound.org/s/584195/)
+- [water drop by deleted_user_2104797](https://freesound.org/s/166320/)
