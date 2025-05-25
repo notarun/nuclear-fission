@@ -40,8 +40,8 @@ local function splitAll(nextMove, onWin)
 
   local splittables = state.splittables()
   if #splittables == 0 then
-    nextMove()
     animating = false
+    nextMove()
     return
   end
 
