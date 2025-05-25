@@ -4,7 +4,6 @@ local lume = require("3rd.lume.lume")
 local Color = require("color")
 local core = require("core")
 local drw = require("draw")
-local fn = require("fn")
 local input = require("input")
 local res = require("res")
 local state = require("state")
@@ -39,14 +38,17 @@ local function Heading(title, nColor)
   return core.Entity({ update = update, draw = draw })
 end
 
-local function LeftButton(label, cb)
+local function Button(opt)
   core.validate({
-    label = { value = label, type = "string" },
-    cb = { value = cb, type = "function" },
+    opt = { value = opt, type = "table" },
+    ["opt.cb"] = { value = opt.cb, type = "function" },
+    ["opt.color"] = { value = opt.color, type = "table" },
+    ["opt.label"] = { value = opt.label, type = "string" },
+    ["opt.position"] = { value = opt.position, type = "string" },
   })
 
-  local txt = lg.newText(res.font.md, label)
-  local tx, ty, hovering = 0, 0, false
+  local txt = lg.newText(res.font.md, opt.label)
+  local tx, ty = 0, 0
   local zoom = { dw = 0, dh = 0 }
 
   local function update(_, ctx)
@@ -54,22 +56,25 @@ local function LeftButton(label, cb)
     local tw, th = txt:getDimensions()
 
     ctx.w, ctx.h = (vw / 4) + zoom.dw, (th * 3) + zoom.dh
-    ctx.x, ctx.y = (vw - ctx.w) / 4, (vh - ctx.h) / 2
+
+    if opt.position == "left" then
+      ctx.x, ctx.y = (vw - ctx.w) / 4, (vh - ctx.h) / 2
+    else -- right
+      ctx.x, ctx.y = (vw - ctx.w) / 1.34, (vh - ctx.h) / 2
+    end
+
     tx, ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 1.2
 
     local items = core.world:queryPoint(lm.getPosition())
-    hovering = lume.find(items, ctx.item) ~= nil
+    local hovering = lume.find(items, ctx.item) ~= nil
 
-    if hovering then
-      flux.to(zoom, 0.1, { dw = 6, dh = 6 }):ease("backout")
-      if input:pressed("click") then cb() end
-    else
-      flux.to(zoom, 0.1, { dw = 0, dh = 0 }):ease("backout")
+    if hovering and input:pressed("click") then
+      flux.to(zoom, 0.2, { dw = 6, dh = 6 }):ease("backout"):oncomplete(opt.cb)
     end
   end
 
   local function draw(ctx)
-    lg.setColor(Color.LavenderIndigo)
+    lg.setColor(opt.color)
     lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 8)
 
     lg.setColor(Color.White)
@@ -77,58 +82,6 @@ local function LeftButton(label, cb)
   end
 
   return core.Entity({ update = update, draw = draw })
-end
-
-local function RightButton(label, cb)
-  core.validate({
-    label = { value = label, type = "string" },
-    cb = { value = cb, type = "function" },
-  })
-
-  local txt = lg.newText(res.font.md, label)
-  local tx, ty, hovering = 0, 0, false
-  local zoom = { dw = 0, dh = 0 }
-
-  local function update(_, ctx)
-    local vw, vh = lg.getDimensions()
-    local tw, th = txt:getDimensions()
-
-    ctx.w, ctx.h = (vw / 4) + zoom.dw, (th * 3) + zoom.dh
-    ctx.x, ctx.y = (vw - ctx.w) / 1.34, (vh - ctx.h) / 2
-    tx, ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 1.2
-
-    local items = core.world:queryPoint(lm.getPosition())
-    hovering = lume.find(items, ctx.item) ~= nil
-
-    if hovering then
-      flux.to(zoom, 0.1, { dw = 6, dh = 6 }):ease("backout")
-      if input:pressed("click") then cb() end
-    else
-      flux.to(zoom, 0.1, { dw = 0, dh = 0 }):ease("backout")
-    end
-  end
-
-  local function draw(ctx)
-    lg.setColor(Color.FireOpal)
-    lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 8)
-
-    lg.setColor(Color.White)
-    lg.draw(txt, tx, ty)
-  end
-
-  return core.Entity({ update = update, draw = draw })
-end
-
-local function PlayerCountSelector()
-  local function update() end
-
-  local function draw() end
-
-  return core.Entity({
-    tags = { "PlayerCountSelector" },
-    update = update,
-    draw = draw,
-  })
 end
 
 local function Escape()
@@ -147,11 +100,7 @@ return (function()
     leftBtn = {
       label = "pass &\nplay",
       cb = function()
-        local entityExists = #fn.entitiesWhereTag(
-          entities,
-          { "PlayerCountSelector" }
-        ) == 1
-        if not entityExists then lume.push(entities, PlayerCountSelector()) end
+        core.goToScene("game", { players = 2 })
       end,
     },
     rightBtn = {
@@ -181,8 +130,18 @@ return (function()
         entities,
         Escape(),
         Heading(s.heading.title, s.heading.nColor),
-        LeftButton(s.leftBtn.label, s.leftBtn.cb),
-        RightButton(s.rightBtn.label, s.rightBtn.cb)
+        Button({
+          label = s.leftBtn.label,
+          cb = s.leftBtn.cb,
+          position = "left",
+          color = Color.LavenderIndigo,
+        }),
+        Button({
+          label = s.rightBtn.label,
+          cb = s.rightBtn.cb,
+          position = "right",
+          color = Color.FireOpal,
+        })
       )
     end,
     leave = function()
