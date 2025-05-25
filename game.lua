@@ -98,7 +98,7 @@ local function Neutrons(i, j)
 
   local function split(ctx, neighbors)
     arrangeNeutrons(ctx)
-    res.sound.plasma:play()
+    res.sound.split:play()
 
     for idx, n in ipairs(neighbors) do
       local cx, cy, cw, ch = cellPosAndSz(n.i, n.j)
@@ -177,7 +177,9 @@ end
 
 local function Escape()
   local function update(_, _)
-    if input:pressed("back") then core.goToScene("menu", { mode = "home" }) end
+    if input:pressed("back") then
+      core.goToScene("menu", { mode = "home" })
+    end
   end
   return core.Entity({ update = update })
 end

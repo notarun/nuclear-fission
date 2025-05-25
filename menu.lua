@@ -119,7 +119,7 @@ end
 
 local function Escape()
   local function update(_, _)
-    if input:pressed("back") then le.quit(0) end
+    if input:released("back") then le.quit(0) end
   end
   return core.Entity({ update = update })
 end
