@@ -14,7 +14,7 @@ local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
 local entities = {}
-local animating, animationTime = false, 0.3
+local animating, animationTime = false, 0.25
 
 local function entitiesWhereTag(tags)
   return lume.filter(entities, function(e)
@@ -24,12 +24,19 @@ local function entitiesWhereTag(tags)
   end)
 end
 
-local function splitAll(oncomplete)
+local function splitAll(nextMove, onWin)
+  core.validate({
+    nextMove = { value = nextMove, type = "function" },
+    onWin = { value = onWin, type = "function" },
+  })
+
   animating = true
+
+  if state.winner() then onWin() end
 
   local splittables = state.splittables()
   if #splittables == 0 then
-    oncomplete()
+    nextMove()
     animating = false
     return
   end
@@ -40,7 +47,7 @@ local function splitAll(oncomplete)
   end
 
   flux.to({}, animationTime * 2, {}):oncomplete(function()
-    splitAll(oncomplete)
+    splitAll(nextMove, onWin)
   end)
 end
 
@@ -140,7 +147,9 @@ local function Cell(i, j)
         toast.show("This cell is owned by other player")
       else
         state.fuse(i, j, state.playing().idx)
-        splitAll(state.nextMove)
+        splitAll(state.nextMove, function()
+          core.goToScene("menu", { mode = "result" })
+        end)
       end
     end
   end
