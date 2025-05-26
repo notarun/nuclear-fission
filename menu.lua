@@ -6,7 +6,6 @@ local core = require("core")
 local drw = require("draw")
 local input = require("input")
 local res = require("res")
-local state = require("state")
 
 local entities = {}
 local lg, lm, le = love.graphics, love.mouse, love.event
@@ -38,13 +37,12 @@ local function Heading(title, nColor)
   return core.Entity({ update = update, draw = draw })
 end
 
-local function Button(opt)
+local function PlayButton(opt)
   core.validate({
     opt = { value = opt, type = "table" },
     ["opt.cb"] = { value = opt.cb, type = "function" },
     ["opt.color"] = { value = opt.color, type = "table" },
     ["opt.label"] = { value = opt.label, type = "string" },
-    ["opt.position"] = { value = opt.position, type = "string" },
   })
 
   local txt = lg.newText(res.font.md, opt.label)
@@ -55,24 +53,10 @@ local function Button(opt)
     local vw, vh = lg.getDimensions()
     local tw, th = txt:getDimensions()
 
-    if opt.position == "left" then
-      ctx.w, ctx.h = (vw / 4) + zoom.dw, (th * 3) + zoom.dh
-      ctx.x, ctx.y = (vw - ctx.w) / 4, (vh - ctx.h) / 2
-    elseif opt.position == "right" then
-      ctx.w, ctx.h = (vw / 4) + zoom.dw, (th * 3) + zoom.dh
-      ctx.x, ctx.y = (vw - ctx.w) / 1.34, (vh - ctx.h) / 2
-    elseif opt.position == "bottom-left" then
-      ctx.w, ctx.h = (vw / 6) + zoom.dw, (th * 1.2) + zoom.dh
-      ctx.x, ctx.y = (vw - ctx.w) / 4, (vh - ctx.h) / 1.5
-    elseif opt.position == "bottom-center" then
-      ctx.w, ctx.h = (vw / 6) + zoom.dw, (th * 1.2) + zoom.dh
-      ctx.x, ctx.y = (vw - ctx.w) / 2, (vh - ctx.h) / 1.5
-    elseif opt.position == "bottom-right" then
-      ctx.w, ctx.h = (vw / 6) + zoom.dw, (th * 1.2) + zoom.dh
-      ctx.x, ctx.y = (vw - ctx.w) / 1.34, (vh - ctx.h) / 1.5
-    end
+    ctx.w, ctx.h = (vw / 1.6) + zoom.dw, (th * 2.4) + zoom.dh
+    ctx.x, ctx.y = (vw - ctx.w) / 2, (vh + ctx.h * 2) / 2
 
-    tx, ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 1.2
+    tx, ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 2
 
     local items = core.world:queryPoint(lm.getPosition())
     local hovering = lume.find(items, ctx.item) ~= nil
@@ -84,7 +68,7 @@ local function Button(opt)
 
   local function draw(ctx)
     lg.setColor(opt.color)
-    lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 8)
+    lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 2)
 
     lg.setColor(Color.White)
     lg.draw(txt, tx, ty)
@@ -104,93 +88,26 @@ local function Escape()
   return core.Entity({ update = update })
 end
 
-return (function()
-  local hidePlayerSelector = true
-
-  local s = {
-    heading = {
-      title = "nuclear fission",
-      nColor = Color.LavenderIndigo,
-    },
-    leftBtn = {
-      label = "pass &\nplay",
-      cb = function()
-        if hidePlayerSelector then
-          lume.push(
-            entities,
-            Button({
-              label = "2P",
-              cb = function()
-                core.goToScene("game", { players = 2 })
-              end,
-              position = "bottom-left",
-              color = Color.LavenderIndigo,
-            }),
-            Button({
-              label = "3P",
-              cb = function()
-                core.goToScene("game", { players = 3 })
-              end,
-              position = "bottom-center",
-              color = Color.LavenderIndigo,
-            }),
-            Button({
-              label = "4P",
-              cb = function()
-                core.goToScene("game", { players = 4 })
-              end,
-              position = "bottom-right",
-              color = Color.LavenderIndigo,
-            })
-          )
-        end
-      end,
-    },
-    rightBtn = {
-      label = "exit  \ngame",
-      cb = function()
-        le.quit(0)
-      end,
-    },
-  }
-
-  return core.Scene({
-    id = "menu",
-    entities = entities,
-    enter = function(args)
-      if args.mode == "result" then
-        local winner = state.winner().player
-        s.heading.title = string.format("%s won!", winner.label)
-        s.heading.nColor = winner.color
-        s.leftBtn.label = "play \nagain"
-      else
-        s.heading.title = "nuclear fission"
-        s.heading.nColor = Color.LavenderIndigo
-        s.leftBtn.label = "pass &\nplay"
-      end
-
-      lume.push(
-        entities,
-        Escape(),
-        Heading(s.heading.title, s.heading.nColor),
-        Button({
-          label = s.leftBtn.label,
-          cb = s.leftBtn.cb,
-          position = "left",
-          color = Color.LavenderIndigo,
-        }),
-        Button({
-          label = s.rightBtn.label,
-          cb = s.rightBtn.cb,
-          position = "right",
-          color = Color.FireOpal,
-        })
-      )
-    end,
-    leave = function()
-      lume.each(entities, function(e)
-        e.ctx.dead = true
-      end)
-    end,
-  })
-end)()
+return core.Scene({
+  id = "menu",
+  entities = entities,
+  enter = function()
+    lume.push(
+      entities,
+      Escape(),
+      Heading("nuclear fission", Color.LavenderIndigo),
+      PlayButton({
+        label = "pass & play",
+        cb = function()
+          core.goToScene("game", { players = 2 })
+        end,
+        color = Color.LavenderIndigo,
+      })
+    )
+  end,
+  leave = function()
+    lume.each(entities, function(e)
+      e.ctx.dead = true
+    end)
+  end,
+})
