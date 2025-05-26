@@ -49,7 +49,7 @@ local function Entity(args)
     ["args.data.w"] = { value = args.data.w, type = "number" },
     ["args.events"] = { value = args.events, type = "table" },
     ["args.draw"] = { value = args.draw, type = "function" },
-    ["args.tags"] = { value = args.events, type = "table" },
+    ["args.tags"] = { value = args.tags, type = "table" },
   })
 
   local itm = { id = args.tags.id, tags = args.tags }

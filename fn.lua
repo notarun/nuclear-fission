@@ -2,16 +2,16 @@ local lume = require("3rd.lume.lume")
 
 local function noop() end
 
+local function dump(val)
+  print(lume.serialize(val))
+end
+
 local function entitiesWhereTag(entities, tags)
   return lume.filter(entities, function(e)
     return lume.all(tags, function(tag)
       return lume.find(e.ctx.item.tags, tag)
     end)
   end)
-end
-
-local function dump(val)
-  print(lume.serialize(val))
 end
 
 local function getiter(x)

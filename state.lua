@@ -3,24 +3,24 @@ local lume = require("3rd.lume.lume")
 local Color = require("color")
 local core = require("core")
 
+local sf = string.format
+
 local _state = {
   matrix = {},
-  players = {},
+  players = {
+    { label = sf("Player 1"), color = Color.LavenderIndigo, dead = false },
+    { label = sf("Player 2"), color = Color.FireOpal, dead = false },
+    { label = sf("Player 3"), color = Color.Turquoise, dead = false },
+    { label = sf("Player 4"), color = Color.Kiwi, dead = false },
+  },
   playing = nil,
-}
-
-local colors = {
-  Color.LavenderIndigo,
-  Color.FireOpal,
-  Color.Turquoise,
-  Color.Kiwi,
 }
 
 local function init(rows, cols, pCount)
   core.validate({
     rows = { value = rows, type = "number" },
     cols = { value = cols, type = "number" },
-    pCount = { value = pCount, type = "number", min = 2, max = 4 },
+    pCount = { value = pCount, type = "number" },
   })
 
   for i = 1, rows do
@@ -30,11 +30,8 @@ local function init(rows, cols, pCount)
     end
   end
 
-  for i = 1, pCount do
-    _state.players[i] = {
-      label = string.format("Player %s", i),
-      color = colors[i],
-    }
+  for i, _ in ipairs(_state.players) do
+    _state.players[i].dead = pCount < i
   end
 
   _state.playing = 1
