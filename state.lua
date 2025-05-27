@@ -74,23 +74,40 @@ end
 
 local function winner()
   local row, col = matrixDimensions()
-  local ownedCells = {}
+  local totalOwnedCells, playerOwnedCellCountMap = 0, {}
 
   for i = 1, row do
     for j = 1, col do
       local owner = cell(i, j).owner
-      if owner then table.insert(ownedCells, owner) end
+      if owner then
+        local count = playerOwnedCellCountMap[owner]
+        if not count then count = 0 end
+        playerOwnedCellCountMap[owner] = count + 1
+        totalOwnedCells = totalOwnedCells + 1
+      end
     end
   end
 
-  if #ownedCells < 2 then return nil end
-  local idx = lume.first(ownedCells)
-  local cnt = lume.count(ownedCells, function(x)
-    return x == idx
+  local alivePlayersCount = lume.count(_state.players, function(p)
+    return p.dead == false
   end)
-  if cnt ~= #ownedCells then return nil end
 
-  return { idx = idx, player = _state.players[idx] }
+  if totalOwnedCells < alivePlayersCount then return nil end
+
+  local alivePlayerCount, alivePlayerIdx = 0, nil
+
+  for player, count in ipairs(playerOwnedCellCountMap) do
+    if count == 0 then
+      _state.players[player].dead = true
+    else
+      alivePlayerCount = alivePlayerCount + 1
+      alivePlayerIdx = player
+    end
+  end
+
+  if alivePlayerCount ~= 1 then return nil end
+
+  return { idx = alivePlayerIdx, player = _state.players[alivePlayerIdx] }
 end
 
 local function cellNeighbors(i, j)
