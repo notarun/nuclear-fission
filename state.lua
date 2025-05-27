@@ -62,11 +62,14 @@ end
 
 local function nextMove()
   local nxt = _state.playing + 1
-  if nxt > #_state.players then
-    _state.playing = 1
-  else
-    _state.playing = nxt
+  if nxt > #_state.players then nxt = 1 end
+
+  while _state.players[nxt].dead do
+    nxt = nxt + 1
+    if nxt > #_state.players then nxt = 1 end
   end
+
+  _state.playing = nxt
 end
 
 local function winner()
