@@ -1,5 +1,3 @@
-local lume = require("3rd.lume.lume")
-
 local Color = require("color")
 local core = require("core")
 
@@ -14,6 +12,7 @@ local _state = {
     { label = sf("Player 4"), color = Color.Kiwi, dead = false },
   },
   playing = nil,
+  playerCount = 2,
 }
 
 local function init(rows, cols, pCount)
@@ -34,6 +33,7 @@ local function init(rows, cols, pCount)
     _state.players[i].dead = pCount < i
   end
 
+  _state.playerCount = pCount
   _state.playing = 1
 end
 
@@ -76,6 +76,10 @@ local function winner()
   local row, col = matrixDimensions()
   local totalOwnedCells, playerOwnedCellCountMap = 0, {}
 
+  for id, player in ipairs(_state.players) do
+    if not player.dead then playerOwnedCellCountMap[id] = 0 end
+  end
+
   for i = 1, row do
     for j = 1, col do
       local owner = cell(i, j).owner
@@ -88,24 +92,19 @@ local function winner()
     end
   end
 
-  local alivePlayersCount = lume.count(_state.players, function(p)
-    return p.dead == false
-  end)
+  if _state.playerCount > totalOwnedCells then return nil end
 
-  if totalOwnedCells < alivePlayersCount then return nil end
+  local alivePlayersCount, alivePlayerIdx = 0, nil
+  for id, player in ipairs(_state.players) do
+    player.dead = player.dead and playerOwnedCellCountMap[id] == 0
 
-  local alivePlayerCount, alivePlayerIdx = 0, nil
-
-  for player, count in ipairs(playerOwnedCellCountMap) do
-    if count == 0 then
-      _state.players[player].dead = true
-    else
-      alivePlayerCount = alivePlayerCount + 1
-      alivePlayerIdx = player
+    if not player.dead then
+      alivePlayersCount = alivePlayersCount + 1
+      alivePlayerIdx = id
     end
   end
 
-  if alivePlayerCount ~= 1 then return nil end
+  if alivePlayersCount ~= 1 then return nil end
 
   return { idx = alivePlayerIdx, player = _state.players[alivePlayerIdx] }
 end
