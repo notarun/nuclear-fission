@@ -26,15 +26,14 @@ local function splitAll(nextMove, onWin)
   animating = true
 
   if state.winner() then
-    animating = false
     onWin()
     return
   end
 
   local splittables = state.splittables()
   if #splittables == 0 then
-    animating = false
     nextMove()
+    animating = false
     return
   end
 
@@ -47,7 +46,10 @@ local function splitAll(nextMove, onWin)
   end
 
   flux.to({}, animationTime + (animationTime / 2), {}):oncomplete(function()
-    splitAll(nextMove, onWin)
+    splitAll(nextMove, function()
+      local e = fn.entitiesWhereTag(entities, { "modal" })[1]
+      if e then e.emit("toggle") end
+    end)
   end)
 end
 
@@ -58,6 +60,69 @@ local function cellPosAndSz(i, j)
   local x, y = (j - 1) * w, (i - 1) * h
 
   return x, y, w, h
+end
+
+local function GameOverModal()
+  local hidden = true
+  local bw = 4
+  local txt = {
+    title = lg.newText(res.font.lg, " game over! "),
+    subtitle = lg.newText(res.font.md, "Player X Won"),
+  }
+  local vw, vh = 0, 0
+
+  local btns = {
+    core.Entity({
+      load = function(ctx)
+        ctx.txt = lg.newText(res.font.md, "Exit")
+      end,
+      update = function(_, ctx)
+      end,
+      draw = function(ctx)
+        lg.setColor(Color.LavenderIndigo)
+        lg.rectangle("")
+      end,
+    }),
+  }
+
+  lume.push(entities, btns[1])
+
+  local function update(_, ctx)
+    if hidden then return end
+    vw, vh = lg.getDimensions()
+    ctx.w, ctx.h = vw / 1.2, vh / 3
+    ctx.x, ctx.y = (vw - ctx.w) / 2, (vh - ctx.h) / 2
+    txt.subtitle:set(sf("%s Won", state.winner().player.label))
+  end
+
+  local function draw(ctx)
+    if hidden then return end
+
+    lg.setColor(Color.CookiesAndCream)
+    lg.rectangle("fill", ctx.x - (bw / 2), ctx.y - (bw / 2), ctx.w + bw, ctx.h + bw, 8)
+
+    lg.setColor(Color.ChineseBlack)
+    lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 8)
+
+    local ttw, tth = txt.title:getDimensions()
+    lg.setColor(Color.CookiesAndCream)
+    lg.draw(txt.title, (vw - ttw) / 2, ctx.y + tth)
+
+    local stw, sth = txt.subtitle:getDimensions()
+    lg.setColor(Color.CookiesAndCream)
+    lg.draw(txt.subtitle, (vw - stw) / 2, ctx.y + (4 * sth))
+  end
+
+  local function toggle()
+    hidden = not hidden
+  end
+
+  return core.Entity({
+    events = { toggle = toggle },
+    tags = { "modal" },
+    update = update,
+    draw = draw,
+  })
 end
 
 local function Neutrons(i, j)
@@ -151,7 +216,8 @@ local function Cell(i, j)
       else
         state.fuse(i, j, state.playing().idx)
         splitAll(state.nextMove, function()
-          core.goToScene("menu", { mode = "result" })
+          local e = fn.entitiesWhereTag(entities, { "modal" })[1]
+          if e then e.emit("toggle") end
         end)
       end
     end
@@ -182,7 +248,6 @@ return core.Scene({
   id = "game",
   entities = entities,
   enter = function(args)
-    lume.push(entities, Escape())
     state.init(12, 6, args.players)
     local rows, cols = state.matrixDimensions()
     for i = 1, rows do
@@ -190,6 +255,7 @@ return core.Scene({
         lume.push(entities, Cell(i, j), Neutrons(i, j))
       end
     end
+    lume.push(entities, Escape(), GameOverModal())
   end,
   leave = function()
     lume.each(entities, function(e)

@@ -6,10 +6,10 @@ local sf = string.format
 local _state = {
   matrix = {},
   players = {
-    { label = sf("Player 1"), color = Color.LavenderIndigo, dead = false },
-    { label = sf("Player 2"), color = Color.FireOpal, dead = false },
-    { label = sf("Player 3"), color = Color.Turquoise, dead = false },
-    { label = sf("Player 4"), color = Color.Kiwi, dead = false },
+    { label = "Player 1", color = Color.LavenderIndigo, dead = false },
+    { label = "Player 2", color = Color.FireOpal, dead = false },
+    { label = "Player 3", color = Color.Turquoise, dead = false },
+    { label = "Player 4", color = Color.Kiwi, dead = false },
   },
   playing = nil,
   playerCount = 2,
