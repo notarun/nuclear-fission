@@ -96,7 +96,7 @@ local function winner()
 
   local alivePlayersCount, alivePlayerIdx = 0, nil
   for id, player in ipairs(_state.players) do
-    player.dead = player.dead and playerOwnedCellCountMap[id] == 0
+    if not player.dead then player.dead = playerOwnedCellCountMap[id] == 0 end
 
     if not player.dead then
       alivePlayersCount = alivePlayersCount + 1
