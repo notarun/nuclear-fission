@@ -1,26 +1,25 @@
-local lume = require("3rd.lume.lume")
-
 local Color = require("color")
 local core = require("core")
 
+local sf = string.format
+
 local _state = {
   matrix = {},
-  players = {},
+  players = {
+    { label = sf("Player 1"), color = Color.LavenderIndigo, dead = false },
+    { label = sf("Player 2"), color = Color.FireOpal, dead = false },
+    { label = sf("Player 3"), color = Color.Turquoise, dead = false },
+    { label = sf("Player 4"), color = Color.Kiwi, dead = false },
+  },
   playing = nil,
-}
-
-local colors = {
-  Color.LavenderIndigo,
-  Color.FireOpal,
-  Color.Turquoise,
-  Color.Kiwi,
+  playerCount = 2,
 }
 
 local function init(rows, cols, pCount)
   core.validate({
     rows = { value = rows, type = "number" },
     cols = { value = cols, type = "number" },
-    pCount = { value = pCount, type = "number", min = 2, max = 4 },
+    pCount = { value = pCount, type = "number" },
   })
 
   for i = 1, rows do
@@ -30,13 +29,11 @@ local function init(rows, cols, pCount)
     end
   end
 
-  for i = 1, pCount do
-    _state.players[i] = {
-      label = string.format("Player %s", i),
-      color = colors[i],
-    }
+  for i, _ in ipairs(_state.players) do
+    _state.players[i].dead = pCount < i
   end
 
+  _state.playerCount = pCount
   _state.playing = 1
 end
 
@@ -65,32 +62,51 @@ end
 
 local function nextMove()
   local nxt = _state.playing + 1
-  if nxt > #_state.players then
-    _state.playing = 1
-  else
-    _state.playing = nxt
+  if nxt > #_state.players then nxt = 1 end
+
+  while _state.players[nxt].dead do
+    nxt = nxt + 1
+    if nxt > #_state.players then nxt = 1 end
   end
+
+  _state.playing = nxt
 end
 
 local function winner()
   local row, col = matrixDimensions()
-  local ownedCells = {}
+  local totalOwnedCells, playerOwnedCellCountMap = 0, {}
+
+  for id, player in ipairs(_state.players) do
+    if not player.dead then playerOwnedCellCountMap[id] = 0 end
+  end
 
   for i = 1, row do
     for j = 1, col do
       local owner = cell(i, j).owner
-      if owner then table.insert(ownedCells, owner) end
+      if owner then
+        local count = playerOwnedCellCountMap[owner]
+        if not count then count = 0 end
+        playerOwnedCellCountMap[owner] = count + 1
+        totalOwnedCells = totalOwnedCells + 1
+      end
     end
   end
 
-  if #ownedCells < 2 then return nil end
-  local idx = lume.first(ownedCells)
-  local cnt = lume.count(ownedCells, function(x)
-    return x == idx
-  end)
-  if cnt ~= #ownedCells then return nil end
+  if _state.playerCount > totalOwnedCells then return nil end
 
-  return { idx = idx, player = _state.players[idx] }
+  local alivePlayersCount, alivePlayerIdx = 0, nil
+  for id, player in ipairs(_state.players) do
+    player.dead = player.dead and playerOwnedCellCountMap[id] == 0
+
+    if not player.dead then
+      alivePlayersCount = alivePlayersCount + 1
+      alivePlayerIdx = id
+    end
+  end
+
+  if alivePlayersCount ~= 1 then return nil end
+
+  return { idx = alivePlayerIdx, player = _state.players[alivePlayerIdx] }
 end
 
 local function cellNeighbors(i, j)
