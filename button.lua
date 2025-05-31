@@ -1,9 +1,9 @@
 local flux = require("3rd.flux.flux")
-local input = require("input")
-local lume = require("3rd.lume.lume")
 
 local Color = require("color")
 local core = require("core")
+local fn = require("fn")
+local input = require("input")
 local res = require("res")
 
 local lm, lg = love.mouse, love.graphics
@@ -46,8 +46,9 @@ return function(opt)
       local tw, th = ctx.txt:getDimensions()
       ctx.tx, ctx.ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 2
 
-      local items = core.world:queryPoint(lm.getPosition())
-      local hovering = lume.find(items, ctx.item) ~= nil
+      local mx, my = lm.getPosition()
+      local hovering = fn.checkCollision(mx, my, ctx.x, ctx.y, ctx.w, ctx.h)
+
       if hovering and input:pressed("click") then
         flux
           .to(ctx.r, ctx.animationTime, { value = 5.4 })

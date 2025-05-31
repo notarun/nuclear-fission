@@ -1,10 +1,9 @@
-local bump = require("3rd.bump.bump")
 local lume = require("3rd.lume.lume")
 
 local fn = require("fn")
 
 local lg, sf = love.graphics, string.format
-local world, _scenes = bump.newWorld(), {}
+local _scenes = {}
 
 local function validate(tb)
   local err
@@ -56,7 +55,6 @@ local function Entity(args)
   local ctx = lume.merge(args.data, { item = itm, dead = false })
 
   if args.load then args.load(ctx) end
-  world:add(itm, ctx.x, ctx.y, ctx.w, ctx.h)
 
   local function emit(ev, ...)
     validate({ ev = { value = ev, type = "string" } })
@@ -68,12 +66,7 @@ local function Entity(args)
   end
 
   local function update(dt)
-    if args.update then
-      args.update(dt, ctx)
-      if world:hasItem(itm) then
-        world:update(itm, ctx.x, ctx.y, ctx.w, ctx.h)
-      end
-    end
+    if args.update then args.update(dt, ctx) end
   end
 
   local function draw()
@@ -96,10 +89,7 @@ local function Scene(args)
   local function update(dt)
     for i, e in lume.ripairs(args.entities) do
       if e.update then e.update(dt) end
-      if e.ctx.dead then
-        table.remove(args.entities, i)
-        world:remove(e.ctx.item)
-      end
+      if e.ctx.dead then table.remove(args.entities, i) end
     end
   end
 
@@ -143,7 +133,6 @@ end
 
 return {
   scene = scene,
-  world = world,
   Scene = Scene,
   Entity = Entity,
   validate = validate,

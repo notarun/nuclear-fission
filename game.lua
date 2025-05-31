@@ -243,8 +243,8 @@ local function Cell(i, j)
   local function update(_, ctx)
     ctx.x, ctx.y, ctx.w, ctx.h = cellPosAndSz(i, j)
 
-    local items = core.world:queryPoint(lm.getPosition())
-    local hovering = lume.find(items, ctx.item) ~= nil
+    local mx, my = lm.getPosition()
+    local hovering = fn.checkCollision(mx, my, ctx.x, ctx.y, ctx.w, ctx.h)
 
     if not animating and hovering and input:pressed("click") then
       local owner, playing = state.cell(i, j).owner, state.playing().idx

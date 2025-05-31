@@ -2,6 +2,13 @@ local lume = require("3rd.lume.lume")
 
 local function noop() end
 
+local function checkCollision(x, y, rectX, rectY, rectWidth, rectHeight)
+  return x >= rectX
+    and x <= rectX + rectWidth
+    and y >= rectY
+    and y <= rectY + rectHeight
+end
+
 local function dump(val)
   print(lume.serialize(val))
 end
@@ -42,5 +49,6 @@ return {
   dump = dump,
   each = each,
   getiter = getiter,
+  checkCollision = checkCollision,
   entitiesWhereTag = entitiesWhereTag,
 }
