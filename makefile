@@ -12,6 +12,10 @@ out/$(PKG_NAME).love: $(LUA_FILES)
 out/web: out/$(PKG_NAME).love
 	@mkdir -p out/web
 	@npx love.js $< $@ --title $(PKG_NAME) -c
+	@echo "* { font-family: monospace; color: white; }" >> $@/theme/love.css
+	@echo "body { background-color: #111111; background-image: none; }" >> $@/theme/love.css
+	@echo "button { display: none; }" >> $@/theme/love.css
+	@echo "h1 { font-family: inherit; color: inherit; }" >> $@/theme/love.css
 
 .PHONY: clean
 clean:
