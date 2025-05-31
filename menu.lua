@@ -56,7 +56,7 @@ local function PlayButton()
 
     if hovering and input:pressed("click") then
       flux
-        .to(zoom, 0.1, { dw = -4, dh = -4 })
+        .to(zoom, 0.2, { dw = -0.8, dh = -0.8 })
         :ease("backout")
         :oncomplete(function()
           local e = fn.entitiesWhereTag(entities, { "PlayerCount" })[1]
