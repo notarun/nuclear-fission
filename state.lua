@@ -175,7 +175,9 @@ local function splittables()
   return t
 end
 
-local function currentPlayerCount()
+local function currentPlayerCount(val)
+  if val ~= nil then _state.playerCount = val end
+
   return _state.playerCount
 end
 

@@ -2,6 +2,7 @@ local flux = require("3rd.flux.flux")
 local lume = require("3rd.lume.lume")
 local toast = require("3rd.toasts.lovelyToasts")
 
+local Button = require("button")
 local Color = require("color")
 local core = require("core")
 local drw = require("draw")
@@ -69,77 +70,39 @@ local function GameOverModal()
     title = lg.newText(res.font.lg, " GAME OVER! "),
     subtitle = lg.newText(res.font.md, "player x won"),
   }
-  local vw, vh = 0, 0
-  local this
-  local btnW, btnH = 160, 50
+  local vw, vh = lg.getDimensions()
+  local leftBtn, rightBtn
 
-  local function load(ctx)
-    this = ctx
-  end
-
-  local function Button(opt)
-    return core.Entity({
-      load = function(ctx)
-        ctx.txt = lg.newText(res.font.md, opt.label)
-        ctx.zoom = { dw = 0, dh = 0 }
-        ctx.x, ctx.y = 1, 1
+  local function load(this)
+    leftBtn = Button({
+      label = "restart",
+      position = "left",
+      color = Color.LavenderIndigo,
+      onclick = function()
+        core.goToScene("game", { players = state.currentPlayerCount() })
+        animating = false
       end,
-      update = function(_, ctx)
-        if not this and hidden then return end
-
+      updatePos = function(ctx)
         local pw = 6 * bw
-        if opt.position == "left" then
-          ctx.x, ctx.y = this.x + pw, this.y + this.h - ctx.h - pw
-        else
-          ctx.x, ctx.y =
-            this.x + this.w - pw - ctx.w, this.y + this.h - ctx.h - pw
-        end
-
-        ctx.w, ctx.h = btnW + ctx.zoom.dw, btnH + ctx.zoom.dh
-
-        local tw, th = ctx.txt:getDimensions()
-        ctx.tx, ctx.ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 2
-
-        local items = core.world:queryPoint(lm.getPosition())
-        local hovering = lume.find(items, ctx.item) ~= nil
-        if hovering and input:pressed("click") then
-          flux
-            .to(ctx.zoom, animationTime, { dw = -0.8, dh = -0.8 })
-            :oncomplete(function()
-              opt.onclick()
-              animating = false
-            end)
-        end
+        ctx.x, ctx.y = this.x + pw, this.y + this.h - ctx.h - pw
       end,
-      draw = function(ctx)
-        if not this and hidden then return end
+    })
 
-        lg.setColor(opt.color)
-        lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 2)
-
-        lg.setColor(Color.White)
-        lg.draw(ctx.txt, ctx.tx, ctx.ty)
+    rightBtn = Button({
+      label = "main menu",
+      position = "right",
+      color = Color.FireOpal,
+      onclick = function()
+        core.goToScene("menu")
+        animating = false
+      end,
+      updatePos = function(ctx)
+        local pw = 6 * bw
+        ctx.x, ctx.y =
+          this.x + this.w - pw - ctx.w, this.y + this.h - ctx.h - pw
       end,
     })
   end
-
-  local leftBtn = Button({
-    label = "restart",
-    position = "left",
-    color = Color.LavenderIndigo,
-    onclick = function()
-      core.goToScene("game", { players = state.currentPlayerCount() })
-    end,
-  })
-
-  local rightBtn = Button({
-    label = "main menu",
-    position = "right",
-    color = Color.FireOpal,
-    onclick = function()
-      core.goToScene("menu")
-    end,
-  })
 
   local function update(_, ctx)
     if hidden then return end
