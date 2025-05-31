@@ -20,7 +20,7 @@ local lm, lg = love.mouse, love.graphics
 return function(opt)
   opt.color = opt.color or Color.LavenderIndigo
   opt.font = opt.font or res.font.md
-  opt.w, opt.h = 160, 50
+  opt.w, opt.h = 140, 50
   opt.r = 4
 
   core.validate({
