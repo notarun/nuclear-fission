@@ -66,40 +66,105 @@ local function GameOverModal()
   local hidden = true
   local bw = 4
   local txt = {
-    title = lg.newText(res.font.lg, " game over! "),
-    subtitle = lg.newText(res.font.md, "Player X Won"),
+    title = lg.newText(res.font.lg, " GAME OVER! "),
+    subtitle = lg.newText(res.font.md, "player x won"),
   }
   local vw, vh = 0, 0
+  local this
+  local btnW, btnH = 160, 50
 
-  local btns = {
-    core.Entity({
-      load = function(ctx)
-        ctx.txt = lg.newText(res.font.md, "Exit")
-      end,
-      update = function(_, ctx)
-      end,
-      draw = function(ctx)
-        lg.setColor(Color.LavenderIndigo)
-        lg.rectangle("")
-      end,
-    }),
-  }
+  local function load(ctx)
+    this = ctx
+  end
 
-  lume.push(entities, btns[1])
+  local leftBtn = core.Entity({
+    load = function(ctx)
+      ctx.txt = lg.newText(res.font.md, "restart")
+    end,
+    update = function(_, ctx)
+      if not this then return end
+
+      local pw = 6 * bw
+      ctx.x, ctx.y = this.x + pw, this.y + this.h - ctx.h - pw
+      ctx.w, ctx.h = btnW, btnH
+
+      local tw, th = ctx.txt:getDimensions()
+      ctx.tx, ctx.ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 2
+
+      local items = core.world:queryPoint(lm.getPosition())
+      local hovering = lume.find(items, ctx.item) ~= nil
+      if hovering and input:pressed("click") then
+        flux.to({ x = 0 }, animationTime, { x = 1 }):oncomplete(function()
+          core.goToScene("game", { players = state.currentPlayerCount() })
+          animating = false
+        end)
+      end
+    end,
+    draw = function(ctx)
+      if not this then return end
+
+      lg.setColor(Color.LavenderIndigo)
+      lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 2)
+
+      lg.setColor(Color.White)
+      lg.draw(ctx.txt, ctx.tx, ctx.ty)
+    end,
+  })
+
+  local rightBtn = core.Entity({
+    load = function(ctx)
+      ctx.txt = lg.newText(res.font.md, "main menu")
+    end,
+    update = function(_, ctx)
+      if not this then return end
+
+      local pw = 6 * bw
+      ctx.x, ctx.y = this.x + this.w - pw - ctx.w, this.y + this.h - ctx.h - pw
+      ctx.w, ctx.h = btnW, btnH
+
+      local tw, th = ctx.txt:getDimensions()
+      ctx.tx, ctx.ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 2
+
+      local items = core.world:queryPoint(lm.getPosition())
+      local hovering = lume.find(items, ctx.item) ~= nil
+      if hovering and input:pressed("click") then
+        flux.to({ x = 0 }, animationTime, { x = 1 }):oncomplete(function()
+          core.goToScene("menu")
+        end)
+      end
+    end,
+    draw = function(ctx)
+      if not this then return end
+      lg.setColor(Color.FireOpal)
+      lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 2)
+
+      lg.setColor(Color.White)
+      lg.draw(ctx.txt, ctx.tx, ctx.ty)
+    end,
+  })
 
   local function update(_, ctx)
     if hidden then return end
     vw, vh = lg.getDimensions()
     ctx.w, ctx.h = vw / 1.2, vh / 3
     ctx.x, ctx.y = (vw - ctx.w) / 2, (vh - ctx.h) / 2
-    txt.subtitle:set(sf("%s Won", state.winner().player.label))
+
+    local winner = state.winner()
+    if winner then txt.subtitle:set(sf("%s Won", winner.player.label)) end
   end
 
   local function draw(ctx)
     if hidden then return end
 
     lg.setColor(Color.CookiesAndCream)
-    lg.rectangle("fill", ctx.x - (bw / 2), ctx.y - (bw / 2), ctx.w + bw, ctx.h + bw, 8)
+    lg.rectangle(
+      "fill",
+      ctx.x - (bw / 2),
+      ctx.y - (bw / 2),
+      ctx.w + bw,
+      ctx.h + bw,
+      8
+    )
 
     lg.setColor(Color.ChineseBlack)
     lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, 8)
@@ -115,6 +180,16 @@ local function GameOverModal()
 
   local function toggle()
     hidden = not hidden
+
+    if not hidden then
+      leftBtn.dead = false
+      rightBtn.dead = false
+
+      lume.push(entities, leftBtn, rightBtn)
+    else
+      leftBtn.dead = true
+      rightBtn.dead = true
+    end
   end
 
   return core.Entity({
@@ -122,6 +197,7 @@ local function GameOverModal()
     tags = { "modal" },
     update = update,
     draw = draw,
+    load = load,
   })
 end
 
@@ -256,6 +332,7 @@ return core.Scene({
       end
     end
     lume.push(entities, Escape(), GameOverModal())
+    animating = false
   end,
   leave = function()
     lume.each(entities, function(e)

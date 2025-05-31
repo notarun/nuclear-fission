@@ -1,8 +1,6 @@
 local Color = require("color")
 local core = require("core")
 
-local sf = string.format
-
 local _state = {
   matrix = {},
   players = {
@@ -177,6 +175,10 @@ local function splittables()
   return t
 end
 
+local function currentPlayerCount()
+  return _state.playerCount
+end
+
 return {
   init = init,
   cell = cell,
@@ -189,4 +191,5 @@ return {
   splittables = splittables,
   cellNeighbors = cellNeighbors,
   matrixDimensions = matrixDimensions,
+  currentPlayerCount = currentPlayerCount,
 }
