@@ -2,7 +2,7 @@ PKG_NAME = nuclear-fission
 LUA_FILES := $(shell find . -name "*.lua" -not -path "./out/*")
 
 .PHONY: all
-all: out/$(PKG_NAME).love out/web
+all: out/$(PKG_NAME).love out/web out/android
 
 out/$(PKG_NAME).love: $(LUA_FILES)
 	@mkdir -p out/
@@ -12,10 +12,18 @@ out/$(PKG_NAME).love: $(LUA_FILES)
 out/web: out/$(PKG_NAME).love
 	@mkdir -p out/web
 	@npx love.js $< $@ --title $(PKG_NAME) -c
-	@echo "* { font-family: monospace; color: white; }" >> $@/theme/love.css
-	@echo "body { background-color: #111111; background-image: none; }" >> $@/theme/love.css
-	@echo "button { display: none; }" >> $@/theme/love.css
-	@echo "h1 { font-family: inherit; color: inherit; }" >> $@/theme/love.css
+	@cp etc/love.css $@/theme/love.css
+
+.PHONY: out/android
+out/android: out/$(PKG_NAME).love
+	@mkdir -p out/android/app/src/embed/assets
+	@if [ ! -d out/android/.git ]; then \
+		echo "Cloning love-android..."; \
+		git clone --recurse-submodules --depth 1 -b 11.5a https://github.com/love2d/love-android out/android; \
+	fi
+	@cp etc/gradle.properties $@/gradle.properties
+	@cp $< $@/app/src/embed/assets/game.love
+	@cd $@ && ./gradlew assembleEmbedNoRecord
 
 .PHONY: clean
 clean:
