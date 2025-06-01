@@ -1,13 +1,17 @@
+local lume = require("3rd.lume.lume")
+
 local Color = require("color")
 local core = require("core")
+
+local history = {}
 
 local _state = {
   matrix = {},
   players = {
-    { label = "Player 1", color = Color.LavenderIndigo, dead = false },
-    { label = "Player 2", color = Color.FireOpal, dead = false },
-    { label = "Player 3", color = Color.Turquoise, dead = false },
-    { label = "Player 4", color = Color.Kiwi, dead = false },
+    { label = "Purple", color = Color.LavenderIndigo, dead = false },
+    { label = "Red", color = Color.FireOpal, dead = false },
+    { label = "Blue", color = Color.Turquoise, dead = false },
+    { label = "Green", color = Color.Kiwi, dead = false },
   },
   playing = nil,
   playerCount = 2,
@@ -42,6 +46,30 @@ local function matrixDimensions()
   return r, c
 end
 
+local function undo()
+  if #history == 0 then return end
+
+  local last = lume.deserialize(lume.last(history))
+  local r, c = matrixDimensions()
+
+  for i = 1, r do
+    for j = 1, c do
+      _state.matrix[i][j].count = last.matrix[i][j].count
+      print(last.matrix[i][j].count)
+      _state.matrix[i][j].owner = last.matrix[i][j].owner
+    end
+  end
+
+  for i, _ in ipairs(_state.players) do
+    _state.players[i].dead = last.players[i].dead
+  end
+
+  _state.playerCount = last.playerCount
+  _state.playing = last.playing
+
+  history[#history] = nil
+end
+
 local function validateCell(i, j)
   local rMax, cMax = matrixDimensions()
 
@@ -59,6 +87,8 @@ local function cell(i, j)
 end
 
 local function nextMove()
+  table.insert(history, lume.serialize(_state))
+
   local nxt = _state.playing + 1
   if nxt > #_state.players then nxt = 1 end
 
@@ -185,6 +215,7 @@ return {
   init = init,
   cell = cell,
   fuse = fuse,
+  undo = undo,
   defuse = defuse,
   winner = winner,
   player = player,

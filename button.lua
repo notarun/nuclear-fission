@@ -11,6 +11,7 @@ local lm, lg = love.mouse, love.graphics
 --- @class ButtonOpts
 --- @field w integer
 --- @field h integer
+--- @field mode "fill" | "line"
 --- @field label string
 --- @field color table
 --- @field onclick function
@@ -18,9 +19,11 @@ local lm, lg = love.mouse, love.graphics
 
 --- @param opt ButtonOpts
 return function(opt)
+  opt.txtColor = Color.White
+  opt.mode = opt.mode or "fill"
   opt.color = opt.color or Color.LavenderIndigo
   opt.font = opt.font or res.font.md
-  opt.w, opt.h = 140, 50
+  opt.w, opt.h = 152, 50
   opt.r = 4
 
   core.validate({
@@ -58,9 +61,9 @@ return function(opt)
     end,
     draw = function(ctx)
       lg.setColor(opt.color)
-      lg.rectangle("fill", ctx.x, ctx.y, ctx.w, ctx.h, ctx.r.value)
+      lg.rectangle(opt.mode, ctx.x, ctx.y, ctx.w, ctx.h, ctx.r.value)
 
-      lg.setColor(Color.White)
+      lg.setColor(opt.txtColor)
       lg.draw(ctx.txt, ctx.tx, ctx.ty)
     end,
   })
