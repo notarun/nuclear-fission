@@ -85,9 +85,10 @@ local function GameOverModal()
         core.goToScene("game", { players = state.currentPlayerCount() })
         animating = false
       end,
-      updatePos = function(ctx)
+      updatePos = function(ctx, opt)
         local pw = 6 * bw
         ctx.x, ctx.y = this.x + pw, this.y + this.h - ctx.h - pw
+        opt.w = (this.w / 2) - (2 * pw)
       end,
     })
 
@@ -98,10 +99,11 @@ local function GameOverModal()
         core.goToScene("menu")
         animating = false
       end,
-      updatePos = function(ctx)
+      updatePos = function(ctx, opt)
         local pw = 6 * bw
         ctx.x, ctx.y =
           this.x + this.w - pw - ctx.w, this.y + this.h - ctx.h - pw
+        opt.w = (this.w / 2) - (2 * pw)
       end,
     })
   end
@@ -254,6 +256,7 @@ local function Cell(i, j)
       if owner and owner ~= playing then
         toast.show("This cell is owned by other player")
       else
+        state.saveHistory()
         state.fuse(i, j, state.playing().idx)
         splitAll(state.nextMove, function()
           local e = fn.entitiesWhereTag(entities, { "modal" })[1]
@@ -278,17 +281,34 @@ local function Cell(i, j)
 end
 
 local function BottomPanel()
+  local goBackButton = Button({
+    label = "back",
+    mode = "line",
+    color = Color.FireOpal,
+    txtColor = Color.FireOpal,
+    onclick = function()
+      if animating then return end
+      core.goToScene("menu")
+    end,
+    updatePos = function(ctx, opt)
+      local vw, vh = lg.getDimensions()
+      opt.w, opt.h = (vw - px) / 4, py - (1.5 * px)
+      ctx.x, ctx.y = px / 2, vh - opt.h - (px / 2)
+    end,
+  })
+
   local undoBtn = Button({
     label = "undo",
     mode = "line",
     color = Color.White,
     onclick = function()
+      if animating then return end
       state.undo()
     end,
     updatePos = function(ctx, opt)
       local vw, vh = lg.getDimensions()
-      opt.w, opt.h = (vw - px) / 2, py - (1.5 * px)
-      ctx.x, ctx.y = px / 2, vh - opt.h - (px / 2)
+      opt.w, opt.h = (vw - px) / 4, py - (1.5 * px)
+      ctx.x, ctx.y = opt.w + px, vh - opt.h - (px / 2)
     end,
   })
 
@@ -309,15 +329,13 @@ local function BottomPanel()
   })
 
   local function load()
-    lume.push(entities, playerIndicator, undoBtn)
+    lume.push(entities, playerIndicator, goBackButton, undoBtn)
   end
 
   return core.Entity({
     load = load,
     update = function()
-      if input:pressed("back") then
-        core.goToScene("menu", { mode = "home" })
-      end
+      if input:pressed("back") then core.goToScene("menu") end
     end,
   })
 end

@@ -17,6 +17,10 @@ local _state = {
   playerCount = 2,
 }
 
+local function saveHistory()
+  table.insert(history, lume.serialize(_state))
+end
+
 local function init(rows, cols, pCount)
   core.validate({
     rows = { value = rows, type = "number" },
@@ -37,6 +41,21 @@ local function init(rows, cols, pCount)
 
   _state.playerCount = pCount
   _state.playing = 1
+
+  lume.clear(history)
+  saveHistory()
+end
+
+local function nextMove()
+  local nxt = _state.playing + 1
+  if nxt > #_state.players then nxt = 1 end
+
+  while _state.players[nxt].dead do
+    nxt = nxt + 1
+    if nxt > #_state.players then nxt = 1 end
+  end
+
+  _state.playing = nxt
 end
 
 local function matrixDimensions()
@@ -49,24 +68,7 @@ end
 local function undo()
   if #history == 0 then return end
 
-  local last = lume.deserialize(lume.last(history))
-  local r, c = matrixDimensions()
-
-  for i = 1, r do
-    for j = 1, c do
-      _state.matrix[i][j].count = last.matrix[i][j].count
-      print(last.matrix[i][j].count)
-      _state.matrix[i][j].owner = last.matrix[i][j].owner
-    end
-  end
-
-  for i, _ in ipairs(_state.players) do
-    _state.players[i].dead = last.players[i].dead
-  end
-
-  _state.playerCount = last.playerCount
-  _state.playing = last.playing
-
+  _state = lume.deserialize(lume.last(history))
   history[#history] = nil
 end
 
@@ -84,20 +86,6 @@ local function cell(i, j)
   local ret = _state.matrix[i][j]
   ret.ownedBy = _state.players[ret.owner]
   return ret
-end
-
-local function nextMove()
-  table.insert(history, lume.serialize(_state))
-
-  local nxt = _state.playing + 1
-  if nxt > #_state.players then nxt = 1 end
-
-  while _state.players[nxt].dead do
-    nxt = nxt + 1
-    if nxt > #_state.players then nxt = 1 end
-  end
-
-  _state.playing = nxt
 end
 
 local function winner()
@@ -133,6 +121,8 @@ local function winner()
   end
 
   if alivePlayersCount ~= 1 then return nil end
+
+  lume.clear(history)
 
   return { idx = alivePlayerIdx, player = _state.players[alivePlayerIdx] }
 end
@@ -221,6 +211,7 @@ return {
   player = player,
   playing = playing,
   nextMove = nextMove,
+  saveHistory = saveHistory,
   splittables = splittables,
   cellNeighbors = cellNeighbors,
   matrixDimensions = matrixDimensions,

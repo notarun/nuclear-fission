@@ -14,12 +14,13 @@ local lm, lg = love.mouse, love.graphics
 --- @field mode "fill" | "line"
 --- @field label string
 --- @field color table
+--- @field txtColor table
 --- @field onclick function
 --- @field updatePos function
 
 --- @param opt ButtonOpts
 return function(opt)
-  opt.txtColor = Color.White
+  opt.txtColor = opt.txtColor or Color.White
   opt.mode = opt.mode or "fill"
   opt.color = opt.color or Color.LavenderIndigo
   opt.font = opt.font or res.font.md
