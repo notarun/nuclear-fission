@@ -16,6 +16,7 @@ local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
 local entities = {}
+local px, py = 18, 82
 local animating, animationTime = false, 0.2
 
 local function splitAll(nextMove, onWin)
@@ -57,8 +58,11 @@ end
 local function cellPosAndSz(i, j)
   local rows, cols = state.matrixDimensions()
   local vw, vh = lg.getDimensions()
+  vw, vh = vw - px, vh - py
+
   local w, h = vw / cols, vh / rows
   local x, y = (j - 1) * w, (i - 1) * h
+  x, y = x + (px / 2), y + (px / 2)
 
   return x, y, w, h
 end
@@ -75,31 +79,31 @@ local function GameOverModal()
 
   local function load(this)
     leftBtn = Button({
-      label = "restart",
-      position = "left",
+      label = "replay",
       color = Color.LavenderIndigo,
       onclick = function()
         core.goToScene("game", { players = state.currentPlayerCount() })
         animating = false
       end,
-      updatePos = function(ctx)
+      updatePos = function(ctx, opt)
         local pw = 6 * bw
         ctx.x, ctx.y = this.x + pw, this.y + this.h - ctx.h - pw
+        opt.w = (this.w / 2) - (2 * pw)
       end,
     })
 
     rightBtn = Button({
       label = "main menu",
-      position = "right",
       color = Color.FireOpal,
       onclick = function()
         core.goToScene("menu")
         animating = false
       end,
-      updatePos = function(ctx)
+      updatePos = function(ctx, opt)
         local pw = 6 * bw
         ctx.x, ctx.y =
           this.x + this.w - pw - ctx.w, this.y + this.h - ctx.h - pw
+        opt.w = (this.w / 2) - (2 * pw)
       end,
     })
   end
@@ -252,6 +256,7 @@ local function Cell(i, j)
       if owner and owner ~= playing then
         toast.show("This cell is owned by other player")
       else
+        state.saveHistory()
         state.fuse(i, j, state.playing().idx)
         splitAll(state.nextMove, function()
           local e = fn.entitiesWhereTag(entities, { "modal" })[1]
@@ -275,11 +280,64 @@ local function Cell(i, j)
   return core.Entity({ update = update, draw = draw })
 end
 
-local function Escape()
-  local function update(_, _)
-    if input:pressed("back") then core.goToScene("menu", { mode = "home" }) end
+local function BottomPanel()
+  local goBackButton = Button({
+    label = "back",
+    mode = "line",
+    color = Color.FireOpal,
+    txtColor = Color.FireOpal,
+    onclick = function()
+      if animating then return end
+      core.goToScene("menu")
+    end,
+    updatePos = function(ctx, opt)
+      local vw, vh = lg.getDimensions()
+      opt.w, opt.h = (vw - px) / 4, py - (1.5 * px)
+      ctx.x, ctx.y = px / 2, vh - opt.h - (px / 2)
+    end,
+  })
+
+  local undoBtn = Button({
+    label = "undo",
+    mode = "line",
+    color = Color.White,
+    onclick = function()
+      if animating then return end
+      state.undo()
+    end,
+    updatePos = function(ctx, opt)
+      local vw, vh = lg.getDimensions()
+      opt.w, opt.h = (vw - px) / 4, py - (1.5 * px)
+      ctx.x, ctx.y = opt.w + px, vh - opt.h - (px / 2)
+    end,
+  })
+
+  local playerIndicator = Button({
+    label = "player x's turn",
+    mode = "line",
+    color = Color.ChineseBlack,
+    onclick = function() end,
+    updatePos = function(ctx, opt)
+      local vw, vh = lg.getDimensions()
+      opt.w, opt.h = (vw - px) / 2, py - (1.5 * px)
+      ctx.x, ctx.y = (px / 2) + opt.w, vh - opt.h - (px / 2)
+
+      local playing = state.playing().player
+      opt.txtColor = playing.color
+      ctx.txt:set(sf("%s's turn", playing.label))
+    end,
+  })
+
+  local function load()
+    lume.push(entities, playerIndicator, goBackButton, undoBtn)
   end
-  return core.Entity({ update = update })
+
+  return core.Entity({
+    load = load,
+    update = function()
+      if input:pressed("back") then core.goToScene("menu") end
+    end,
+  })
 end
 
 return core.Scene({
@@ -293,7 +351,7 @@ return core.Scene({
         lume.push(entities, Cell(i, j), Neutrons(i, j))
       end
     end
-    lume.push(entities, Escape(), GameOverModal())
+    lume.push(entities, BottomPanel(), GameOverModal())
     animating = false
   end,
   leave = function()

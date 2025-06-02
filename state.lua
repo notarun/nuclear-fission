@@ -1,17 +1,25 @@
+local lume = require("3rd.lume.lume")
+
 local Color = require("color")
 local core = require("core")
+
+local history = {}
 
 local _state = {
   matrix = {},
   players = {
-    { label = "Player 1", color = Color.LavenderIndigo, dead = false },
-    { label = "Player 2", color = Color.FireOpal, dead = false },
-    { label = "Player 3", color = Color.Turquoise, dead = false },
-    { label = "Player 4", color = Color.Kiwi, dead = false },
+    { label = "Purple", color = Color.LavenderIndigo, dead = false },
+    { label = "Red", color = Color.FireOpal, dead = false },
+    { label = "Blue", color = Color.Turquoise, dead = false },
+    { label = "Green", color = Color.Kiwi, dead = false },
   },
   playing = nil,
   playerCount = 2,
 }
+
+local function saveHistory()
+  table.insert(history, lume.serialize(_state))
+end
 
 local function init(rows, cols, pCount)
   core.validate({
@@ -33,6 +41,21 @@ local function init(rows, cols, pCount)
 
   _state.playerCount = pCount
   _state.playing = 1
+
+  lume.clear(history)
+  saveHistory()
+end
+
+local function nextMove()
+  local nxt = _state.playing + 1
+  if nxt > #_state.players then nxt = 1 end
+
+  while _state.players[nxt].dead do
+    nxt = nxt + 1
+    if nxt > #_state.players then nxt = 1 end
+  end
+
+  _state.playing = nxt
 end
 
 local function matrixDimensions()
@@ -40,6 +63,13 @@ local function matrixDimensions()
   if r == 0 then return r, 0 end
   local c = #(_state.matrix[1] or {})
   return r, c
+end
+
+local function undo()
+  if #history == 0 then return end
+
+  _state = lume.deserialize(lume.last(history))
+  history[#history] = nil
 end
 
 local function validateCell(i, j)
@@ -56,18 +86,6 @@ local function cell(i, j)
   local ret = _state.matrix[i][j]
   ret.ownedBy = _state.players[ret.owner]
   return ret
-end
-
-local function nextMove()
-  local nxt = _state.playing + 1
-  if nxt > #_state.players then nxt = 1 end
-
-  while _state.players[nxt].dead do
-    nxt = nxt + 1
-    if nxt > #_state.players then nxt = 1 end
-  end
-
-  _state.playing = nxt
 end
 
 local function winner()
@@ -103,6 +121,8 @@ local function winner()
   end
 
   if alivePlayersCount ~= 1 then return nil end
+
+  lume.clear(history)
 
   return { idx = alivePlayerIdx, player = _state.players[alivePlayerIdx] }
 end
@@ -185,11 +205,13 @@ return {
   init = init,
   cell = cell,
   fuse = fuse,
+  undo = undo,
   defuse = defuse,
   winner = winner,
   player = player,
   playing = playing,
   nextMove = nextMove,
+  saveHistory = saveHistory,
   splittables = splittables,
   cellNeighbors = cellNeighbors,
   matrixDimensions = matrixDimensions,
