@@ -1,3 +1,5 @@
+_G.NF_DEBUG = false
+
 local flux = require("3rd.flux.flux")
 local toast = require("3rd.toasts.lovelyToasts")
 
@@ -22,6 +24,7 @@ function love.update(dt)
   input:update()
   toast.update(dt)
   core.scene().update(dt)
+  if input:pressed("debug") then _G.NF_DEBUG = not _G.NF_DEBUG end
 end
 
 function love.draw()

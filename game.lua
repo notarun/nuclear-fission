@@ -11,7 +11,6 @@ local input = require("input")
 local res = require("res")
 local state = require("state")
 
-local debugMode = os.getenv("DEBUG") == "true"
 local lg, lm = love.graphics, love.mouse
 local sf = string.format
 
@@ -226,7 +225,7 @@ local function Neutrons(i, j)
   local function draw(_)
     for idx, n in ipairs(neutrons) do
       drw.neutron(n.x, n.y, color, vibration)
-      if debugMode then
+      if _G.NF_DEBUG then
         local txt = sf("%s/%s\n%s:%s", idx, #neutrons, i, j)
         lg.setColor(Color.White)
         lg.print(txt, n.x - 18 / 2, n.y - 18 / 2)
@@ -269,7 +268,7 @@ local function Cell(i, j)
   local function draw(ctx)
     lg.setColor(state.playing().player.color)
     lg.rectangle("line", ctx.x, ctx.y, ctx.w, ctx.h)
-    if debugMode then
+    if _G.NF_DEBUG then
       local cell = state.cell(i, j)
       local text = sf("c%sp%s\n%s:%s", cell.count, cell.owner or "", i, j)
       lg.setColor(Color.White)
