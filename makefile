@@ -6,7 +6,7 @@ all: out/$(PKG_NAME).love out/web out/android
 
 out/$(PKG_NAME).love: $(LUA_FILES)
 	@mkdir -p out/
-	@zip -9 -r $@ . -x "out/*" ".git/*" ".gitignore"
+	@zip -9 -r $@ . -x "out/*" ".git/*" ".gitignore" "etc" "art"
 
 .PHONY: out/web
 out/web: out/$(PKG_NAME).love
@@ -16,7 +16,6 @@ out/web: out/$(PKG_NAME).love
 
 .PHONY: out/android
 out/android: out/$(PKG_NAME).love
-	@mkdir -p out/android/app/src/embed/assets
 	@if [ ! -d out/android/.git ]; then \
 		echo "Cloning love-android..."; \
 		git clone --recurse-submodules --depth 1 -b 11.5a https://github.com/love2d/love-android out/android; \
