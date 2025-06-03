@@ -90,7 +90,7 @@ end
 
 local function winner()
   local row, col = matrixDimensions()
-  local totalOwnedCells, playerOwnedCellCountMap = 0, {}
+  local totalCount, playerOwnedCellCountMap = 0, {}
 
   for id, player in ipairs(_state.players) do
     if not player.dead then playerOwnedCellCountMap[id] = 0 end
@@ -98,17 +98,17 @@ local function winner()
 
   for i = 1, row do
     for j = 1, col do
-      local owner = cell(i, j).owner
-      if owner then
-        local count = playerOwnedCellCountMap[owner]
+      local c = cell(i, j)
+      if c.owner then
+        local count = playerOwnedCellCountMap[c.owner]
         if not count then count = 0 end
-        playerOwnedCellCountMap[owner] = count + 1
-        totalOwnedCells = totalOwnedCells + 1
+        playerOwnedCellCountMap[c.owner] = count + 1
+        totalCount = totalCount + c.count
       end
     end
   end
 
-  if _state.playerCount > totalOwnedCells then return nil end
+  if _state.playerCount > totalCount then return nil end
 
   local alivePlayersCount, alivePlayerIdx = 0, nil
   for id, player in ipairs(_state.players) do
