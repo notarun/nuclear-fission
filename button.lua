@@ -12,7 +12,8 @@ local lm, lg = love.mouse, love.graphics
 --- @field w integer
 --- @field h integer
 --- @field mode "fill" | "line"
---- @field label string
+--- @field label string | userdata
+--- @field icon table
 --- @field color table
 --- @field txtColor table
 --- @field onclick function
@@ -30,7 +31,6 @@ return function(opt)
   core.validate({
     ["opt.w"] = { value = opt.w, type = "number" },
     ["opt.h"] = { value = opt.h, type = "number" },
-    ["opt.label"] = { value = opt.label, type = "string" },
     ["opt.color"] = { value = opt.color, type = "table" },
     ["opt.onclick"] = { value = opt.onclick, type = "function" },
     ["opt.updatePos"] = { value = opt.updatePos, type = "function" },
@@ -38,7 +38,14 @@ return function(opt)
 
   return core.Entity({
     load = function(ctx)
-      ctx.txt = lg.newText(opt.font, opt.label)
+      if type(opt.label) == "string" then
+        ctx.txt = lg.newText(opt.font, opt.label)
+      elseif type(opt.label) == "userdata" then
+        ctx.txt = opt.label
+      else
+        error("`opt.lable` must be of type string | Image")
+      end
+
       ctx.r = { value = opt.r }
       ctx.x, ctx.y = 1, 1
       ctx.animationTime = 0.2

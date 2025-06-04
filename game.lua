@@ -280,8 +280,8 @@ local function Cell(i, j)
 end
 
 local function BottomPanel()
-  local goBackButton = Button({
-    label = "back",
+  local homeButton = Button({
+    label = res.icon.home,
     mode = "line",
     color = Color.FireOpal,
     txtColor = Color.FireOpal,
@@ -291,13 +291,13 @@ local function BottomPanel()
     end,
     updatePos = function(ctx, opt)
       local vw, vh = lg.getDimensions()
-      opt.w, opt.h = (vw - px) / 4, py - (1.5 * px)
+      opt.w, opt.h = (vw - px) / 6, py - (1.5 * px)
       ctx.x, ctx.y = px / 2, vh - opt.h - (px / 2)
     end,
   })
 
   local undoBtn = Button({
-    label = "undo",
+    label = res.icon.undo,
     mode = "line",
     color = Color.White,
     onclick = function()
@@ -306,7 +306,7 @@ local function BottomPanel()
     end,
     updatePos = function(ctx, opt)
       local vw, vh = lg.getDimensions()
-      opt.w, opt.h = (vw - px) / 4, py - (1.5 * px)
+      opt.w, opt.h = (vw - px) / 6, py - (1.5 * px)
       ctx.x, ctx.y = opt.w + px, vh - opt.h - (px / 2)
     end,
   })
@@ -328,7 +328,7 @@ local function BottomPanel()
   })
 
   local function load()
-    lume.push(entities, playerIndicator, goBackButton, undoBtn)
+    lume.push(entities, playerIndicator, homeButton, undoBtn)
   end
 
   return core.Entity({
