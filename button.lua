@@ -1,4 +1,5 @@
 local flux = require("3rd.flux.flux")
+local lume = require("3rd.lume.lume")
 
 local Color = require("color")
 local core = require("core")
@@ -21,9 +22,9 @@ local lm, lg = love.mouse, love.graphics
 
 --- @param opt ButtonOpts
 return function(opt)
-  opt.txtColor = opt.txtColor or Color.White
   opt.mode = opt.mode or "fill"
-  opt.color = opt.color or Color.LavenderIndigo
+  opt.txtColor = lume.clone(opt.txtColor or Color.White)
+  opt.color = lume.clone(opt.color or Color.LavenderIndigo)
   opt.font = opt.font or res.font.md
   opt.w, opt.h = 152, 50
   opt.r = 4
@@ -38,12 +39,14 @@ return function(opt)
 
   return core.Entity({
     load = function(ctx)
+      ctx.opacity = 1
+
       if type(opt.label) == "string" then
         ctx.txt = lg.newText(opt.font, opt.label)
       elseif type(opt.label) == "userdata" then
         ctx.txt = opt.label
       else
-        error("`opt.lable` must be of type string | Image")
+        error("`opt.label` must be of type string | Image")
       end
 
       ctx.r = { value = opt.r }
@@ -68,9 +71,11 @@ return function(opt)
       end
     end,
     draw = function(ctx)
+      opt.color[4] = ctx.opacity
       lg.setColor(opt.color)
       lg.rectangle(opt.mode, ctx.x, ctx.y, ctx.w, ctx.h, ctx.r.value)
 
+      opt.txtColor[4] = ctx.opacity
       lg.setColor(opt.txtColor)
       lg.draw(ctx.txt, ctx.tx, ctx.ty)
     end,

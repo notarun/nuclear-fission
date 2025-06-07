@@ -154,12 +154,14 @@ local function GameOverModal()
     hidden = not hidden
 
     if not hidden then
-      leftBtn.dead = false
-      rightBtn.dead = false
-
       transition.scale = 1.2
       flux.to(transition, 0.1, { scale = 1 }):oncomplete(function()
+        leftBtn.dead, leftBtn.ctx.opacity = false, 0
+        rightBtn.dead, rightBtn.ctx.opacity = false, 0
         lume.push(entities, leftBtn, rightBtn)
+
+        flux.to(leftBtn.ctx, 0.5, { opacity = 1 })
+        flux.to(rightBtn.ctx, 0.5, { opacity = 1 })
       end)
     else
       leftBtn.dead = true
