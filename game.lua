@@ -77,7 +77,7 @@ local function GameOverModal()
   local leftBtn, rightBtn
 
   local function load(this)
-    leftBtn = Button({
+    rightBtn = Button({
       label = "replay",
       color = Color.LavenderIndigo,
       onclick = function()
@@ -86,12 +86,13 @@ local function GameOverModal()
       end,
       updatePos = function(ctx, opt)
         local pw = 6 * bw
-        ctx.x, ctx.y = this.x + pw, this.y + this.h - ctx.h - pw
+        ctx.x, ctx.y =
+          this.x + this.w - pw - ctx.w, this.y + this.h - ctx.h - pw
         opt.w = (this.w / 2) - (2 * pw)
       end,
     })
 
-    rightBtn = Button({
+    leftBtn = Button({
       label = "main menu",
       color = Color.FireOpal,
       onclick = function()
@@ -100,8 +101,7 @@ local function GameOverModal()
       end,
       updatePos = function(ctx, opt)
         local pw = 6 * bw
-        ctx.x, ctx.y =
-          this.x + this.w - pw - ctx.w, this.y + this.h - ctx.h - pw
+        ctx.x, ctx.y = this.x + pw, this.y + this.h - ctx.h - pw
         opt.w = (this.w / 2) - (2 * pw)
       end,
     })
