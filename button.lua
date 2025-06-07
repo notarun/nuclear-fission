@@ -45,9 +45,8 @@ return function(opt)
 
       ctx.txt = lg.newText(opt.font, opt.label)
 
-      ctx.r = { value = opt.r }
       ctx.x, ctx.y = 1, 1
-      ctx.animationTime = 0.2
+      ctx.animation = { dty = 0, duration = 0.1 }
     end,
     update = function(_, ctx)
       opt.updatePos(ctx, opt)
@@ -55,21 +54,22 @@ return function(opt)
       ctx.w, ctx.h = opt.w, opt.h
       local tw, th = ctx.txt:getDimensions()
       ctx.tx, ctx.ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 2
+      ctx.ty = ctx.ty + ctx.animation.dty
 
       local mx, my = lm.getPosition()
       local hovering = fn.checkCollision(mx, my, ctx.x, ctx.y, ctx.w, ctx.h)
 
       if hovering and input:pressed("click") then
         flux
-          .to(ctx.r, ctx.animationTime, { value = 5.4 })
+          .to(ctx.animation, ctx.animation.duration, { dty = ctx.h / 24 })
           :oncomplete(opt.onclick)
-          :after(ctx.r, ctx.animationTime, { value = opt.r })
+          :after(ctx.animation, ctx.animation.duration, { dty = 0 })
       end
     end,
     draw = function(ctx)
       opt.color[4] = ctx.opacity
       lg.setColor(opt.color)
-      lg.rectangle(opt.mode, ctx.x, ctx.y, ctx.w, ctx.h, ctx.r.value)
+      lg.rectangle(opt.mode, ctx.x, ctx.y, ctx.w, ctx.h, 4)
 
       opt.txtColor[4] = ctx.opacity
       lg.setColor(opt.txtColor)
