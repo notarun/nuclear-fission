@@ -17,6 +17,7 @@ local lm, lg = love.mouse, love.graphics
 --- @field color table
 --- @field txtColor table
 --- @field onclick function
+--- @field z number
 --- @field updatePos function
 
 --- @param opt ButtonOpts
@@ -38,6 +39,7 @@ return function(opt)
   })
 
   return core.Entity({
+    z = opt.z,
     load = function(ctx)
       ctx.opacity = 1
 

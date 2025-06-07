@@ -36,6 +36,7 @@ local function validate(tb)
 end
 
 local function Entity(args)
+  args.z = args.z or 0
   args.data = args.data or {}
   args.tags = args.tags or {}
   args.data.x, args.data.y = args.data.x or 0, args.data.y or 0
@@ -53,7 +54,7 @@ local function Entity(args)
     ["args.tags"] = { value = args.tags, type = "table" },
   })
 
-  local itm = { id = args.tags.id, tags = args.tags }
+  local itm = { id = args.tags.id, tags = args.tags, z = args.z }
   local ctx = lume.merge(args.data, { item = itm, dead = false })
 
   if args.load then args.load(ctx) end
@@ -104,7 +105,11 @@ local function Scene(args)
     lg.scale(transition.scale)
     lg.translate(-vw / 2, -vh / 2)
 
-    for _, b in ipairs(args.entities) do
+    local sorted = lume.sort(args.entities, function(a, b)
+      return a.ctx.item.z < b.ctx.item.z
+    end)
+
+    for _, b in ipairs(sorted) do
       if b.draw then b.draw() end
     end
   end

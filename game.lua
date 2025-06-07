@@ -77,10 +77,11 @@ local function GameOverModal()
   }
   local vw, vh = lg.getDimensions()
   local transition = { scale = 1 }
-  local leftBtn, rightBtn, winner
+  local leftBtn, rightBtn, overlay, winner
 
   local function load(this)
     rightBtn = Button({
+      z = 2,
       label = "replay",
       color = Color.LavenderIndigo,
       onclick = function()
@@ -96,6 +97,7 @@ local function GameOverModal()
     })
 
     leftBtn = Button({
+      z = 2,
       label = "home",
       color = Color.FireOpal,
       onclick = function()
@@ -108,6 +110,24 @@ local function GameOverModal()
         opt.w = (this.w / 2) - (2 * pw)
       end,
     })
+
+    overlay = core.Entity({
+      z = 1,
+      load = function(ctx)
+        ctx.opacity = 0
+        ctx.color = lume.clone(Color.ChineseBlack)
+      end,
+      update = function(_, ctx)
+        ctx.vw, ctx.vh = lg:getDimensions()
+      end,
+      draw = function(ctx)
+        ctx.color[4] = ctx.opacity
+        lg.setColor(ctx.color)
+        lg.rectangle("fill", 0, 0, ctx.vw, ctx.vh)
+      end,
+    })
+
+    lume.push(entities, overlay)
   end
 
   local function update(_, ctx)
@@ -154,22 +174,27 @@ local function GameOverModal()
     hidden = not hidden
 
     if not hidden then
+      leftBtn.dead, leftBtn.ctx.opacity = false, 0
+      rightBtn.dead, rightBtn.ctx.opacity = false, 0
       transition.scale = 1.2
-      flux.to(transition, 0.1, { scale = 1 }):oncomplete(function()
-        leftBtn.dead, leftBtn.ctx.opacity = false, 0
-        rightBtn.dead, rightBtn.ctx.opacity = false, 0
-        lume.push(entities, leftBtn, rightBtn)
 
+      lume.push(entities, rightBtn, leftBtn)
+
+      flux.to(overlay.ctx, 0.1, { opacity = 0.5 })
+
+      flux.to(transition, 0.1, { scale = 1 }):oncomplete(function()
         flux.to(leftBtn.ctx, 0.5, { opacity = 1 })
         flux.to(rightBtn.ctx, 0.5, { opacity = 1 })
       end)
     else
       leftBtn.dead = true
       rightBtn.dead = true
+      flux.to(overlay.ctx, 0.1, { opacity = 0 })
     end
   end
 
   return core.Entity({
+    z = 2,
     events = { toggle = toggle },
     tags = { "modal" },
     update = update,
