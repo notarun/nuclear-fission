@@ -1,9 +1,11 @@
+local flux = require("3rd.flux.flux")
 local lume = require("3rd.lume.lume")
 
 local fn = require("fn")
 
 local lg, sf = love.graphics, string.format
 local _scenes = {}
+local transition = { scale = 1 }
 
 local function validate(tb)
   local err
@@ -94,6 +96,11 @@ local function Scene(args)
   end
 
   local function draw()
+    local vw, vh = lg.getDimensions()
+    lg.translate(vw / 2, vh / 2)
+    lg.scale(transition.scale)
+    lg.translate(-vw / 2, -vh / 2)
+
     for _, b in ipairs(args.entities) do
       if b.draw then b.draw() end
     end
@@ -123,6 +130,10 @@ local function goToScene(id, args)
   assert(_scenes[id], err)
 
   if _scenes.current then _scenes.current.leave(args) end
+
+  transition.scale = 1.01
+  flux.to(transition, 0.1, { scale = 1 })
+
   _scenes.current = _scenes[id]
   _scenes.current.enter(args)
 end

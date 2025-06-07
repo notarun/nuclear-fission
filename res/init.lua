@@ -16,5 +16,5 @@ return {
   icon = {
     home = lg.newImage(ICON_HOME_PNG),
     undo = lg.newImage(ICON_UNDO_PNG),
-  }
+  },
 }

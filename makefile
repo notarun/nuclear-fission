@@ -6,7 +6,7 @@ all: out/$(PKG_NAME).love out/web out/android
 
 out/$(PKG_NAME).love: $(LUA_FILES)
 	@mkdir -p out/
-	@zip -9 -r $@ . -x "out/*" ".git/*" ".gitignore" "etc" "art"
+	@zip -9 -r $@ . -x "out/*" ".git/*" ".gitignore" "etc" "art" ".claude"
 
 .PHONY: out/web
 out/web: out/$(PKG_NAME).love
