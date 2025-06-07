@@ -1,3 +1,4 @@
+local flux = require("3rd.flux.flux")
 local lume = require("3rd.lume.lume")
 
 local Button = require("button")
@@ -126,6 +127,16 @@ local function PlayerCount()
 end
 
 local function Background()
+  local animate
+  local animating = { duration = 10, scale = 1 }
+
+  animate = function()
+    flux
+      .to(animating, animating.duration, { scale = 1.1 })
+      :after(animating, animating.duration, { scale = 1 })
+      :oncomplete(animate)
+  end
+
   return core.Entity({
     z = 0,
     load = function(ctx)
@@ -133,11 +144,16 @@ local function Background()
       ctx.vw, ctx.vh = lg.getDimensions()
       ctx.color = lume.clone(Color.LavenderIndigo)
       ctx.color[4] = 0.03
+      animate()
     end,
     update = function(_, ctx)
       ctx.vw, ctx.vh = lg.getDimensions()
     end,
     draw = function(ctx)
+      lg.translate(ctx.vw / 2, ctx.vh / 2)
+      lg.scale(animating.scale)
+      lg.translate(-ctx.vw / 2, -ctx.vh / 2)
+
       local w, h = ctx.vw / ctx.cols, ctx.vh / ctx.rows
 
       for i = 1, ctx.rows do
