@@ -88,7 +88,11 @@ local function Scene(args)
     ["args.entities"] = { value = args.entities, type = "table" },
   })
 
+  local vw, vh = lg.getDimensions()
+
   local function update(dt)
+    vw, vh = lg.getDimensions()
+
     for i, e in lume.ripairs(args.entities) do
       if e.update then e.update(dt) end
       if e.ctx.dead then table.remove(args.entities, i) end
@@ -96,7 +100,6 @@ local function Scene(args)
   end
 
   local function draw()
-    local vw, vh = lg.getDimensions()
     lg.translate(vw / 2, vh / 2)
     lg.scale(transition.scale)
     lg.translate(-vw / 2, -vh / 2)

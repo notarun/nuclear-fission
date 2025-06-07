@@ -16,7 +16,7 @@ local sf = string.format
 
 local entities = {}
 local px, py = 18, 82
-local animating, animationTime = false, 0.2
+local animating, animationDuration = false, 0.2
 
 local function splitAll(nextMove, onWin)
   core.validate({
@@ -46,12 +46,14 @@ local function splitAll(nextMove, onWin)
     e.emit("split", s.neighbors)
   end
 
-  flux.to({}, animationTime + (animationTime / 2), {}):oncomplete(function()
-    splitAll(nextMove, function()
-      local e = fn.entitiesWhereTag(entities, { "modal" })[1]
-      if e then e.emit("toggle") end
+  flux
+    .to({}, animationDuration + (animationDuration / 2), {})
+    :oncomplete(function()
+      splitAll(nextMove, function()
+        local e = fn.entitiesWhereTag(entities, { "modal" })[1]
+        if e then e.emit("toggle") end
+      end)
     end)
-  end)
 end
 
 local function cellPosAndSz(i, j)
@@ -74,6 +76,7 @@ local function GameOverModal()
     subtitle = lg.newText(res.font.md, "player x won"),
   }
   local vw, vh = lg.getDimensions()
+  local transition = { scale = 1 }
   local leftBtn, rightBtn
 
   local function load(this)
@@ -121,6 +124,10 @@ local function GameOverModal()
   local function draw(ctx)
     if hidden then return end
 
+    lg.translate(vw / 2, vh / 2)
+    lg.scale(transition.scale)
+    lg.translate(-vw / 2, -vh / 2)
+
     lg.setColor(Color.CookiesAndCream)
     lg.rectangle(
       "fill",
@@ -150,7 +157,10 @@ local function GameOverModal()
       leftBtn.dead = false
       rightBtn.dead = false
 
-      lume.push(entities, leftBtn, rightBtn)
+      transition.scale = 1.2
+      flux.to(transition, 0.1, { scale = 1 }):oncomplete(function()
+        lume.push(entities, leftBtn, rightBtn)
+      end)
     else
       leftBtn.dead = true
       rightBtn.dead = true
@@ -206,7 +216,7 @@ local function Neutrons(i, j)
       local cx, cy, cw, ch = cellPosAndSz(n.i, n.j)
       local tx, ty = cx + cw / 2, cy + ch / 2
       flux
-        .to(neutrons[idx], animationTime, { x = tx, y = ty })
+        .to(neutrons[idx], animationDuration, { x = tx, y = ty })
         :oncomplete(function()
           state.fuse(n.i, n.j, state.playing().idx)
           state.defuse(i, j)
