@@ -293,32 +293,33 @@ end
 
 local function BottomPanel()
   local homeButton = Button({
-    label = res.icon.home,
+    label = "home",
     mode = "line",
-    color = Color.FireOpal,
-    txtColor = Color.FireOpal,
+    color = Color.White,
+    txtColor = Color.White,
     onclick = function()
       if animating then return end
       core.goToScene("menu")
     end,
     updatePos = function(ctx, opt)
       local vw, vh = lg.getDimensions()
-      opt.w, opt.h = (vw - px) / 6, py - (1.5 * px)
+      opt.w, opt.h = (vw - px) / 4, py - (1.5 * px)
       ctx.x, ctx.y = px / 2, vh - opt.h - (px / 2)
     end,
   })
 
   local undoBtn = Button({
-    label = res.icon.undo,
+    label = "undo",
     mode = "line",
-    color = Color.White,
+    color = Color.FireOpal,
+    txtColor = Color.FireOpal,
     onclick = function()
       if animating then return end
       state.undo()
     end,
     updatePos = function(ctx, opt)
       local vw, vh = lg.getDimensions()
-      opt.w, opt.h = (vw - px) / 6, py - (1.5 * px)
+      opt.w, opt.h = (vw - px) / 4, py - (1.5 * px)
       ctx.x, ctx.y = opt.w + px, vh - opt.h - (px / 2)
     end,
   })

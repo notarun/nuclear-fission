@@ -13,8 +13,7 @@ local lm, lg = love.mouse, love.graphics
 --- @field w integer
 --- @field h integer
 --- @field mode "fill" | "line"
---- @field label string | userdata
---- @field icon table
+--- @field label string
 --- @field color table
 --- @field txtColor table
 --- @field onclick function
@@ -33,6 +32,7 @@ return function(opt)
     ["opt.w"] = { value = opt.w, type = "number" },
     ["opt.h"] = { value = opt.h, type = "number" },
     ["opt.color"] = { value = opt.color, type = "table" },
+    ["opt.label"] = { value = opt.label, type = "string" },
     ["opt.onclick"] = { value = opt.onclick, type = "function" },
     ["opt.updatePos"] = { value = opt.updatePos, type = "function" },
   })
@@ -41,13 +41,7 @@ return function(opt)
     load = function(ctx)
       ctx.opacity = 1
 
-      if type(opt.label) == "string" then
-        ctx.txt = lg.newText(opt.font, opt.label)
-      elseif type(opt.label) == "userdata" then
-        ctx.txt = opt.label
-      else
-        error("`opt.label` must be of type string | Image")
-      end
+      ctx.txt = lg.newText(opt.font, opt.label)
 
       ctx.r = { value = opt.r }
       ctx.x, ctx.y = 1, 1
