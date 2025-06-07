@@ -125,6 +125,32 @@ local function PlayerCount()
   })
 end
 
+local function Background()
+  return core.Entity({
+    z = 0,
+    load = function(ctx)
+      ctx.rows, ctx.cols = 24, 12
+      ctx.vw, ctx.vh = lg.getDimensions()
+      ctx.color = lume.clone(Color.LavenderIndigo)
+      ctx.color[4] = 0.03
+    end,
+    update = function(_, ctx)
+      ctx.vw, ctx.vh = lg.getDimensions()
+    end,
+    draw = function(ctx)
+      local w, h = ctx.vw / ctx.cols, ctx.vh / ctx.rows
+
+      for i = 1, ctx.rows do
+        for j = 1, ctx.cols do
+          local x, y = (j - 1) * w, (i - 1) * h
+          lg.setColor(ctx.color)
+          lg.rectangle("line", x, y, w, h)
+        end
+      end
+    end,
+  })
+end
+
 local function Escape()
   local function update(_, _)
     if input:pressed("back") then le.quit(0) end
@@ -136,7 +162,14 @@ return core.Scene({
   id = "menu",
   entities = entities,
   enter = function()
-    lume.push(entities, Escape(), Heading(), PlayButton(), PlayerCount())
+    lume.push(
+      entities,
+      Escape(),
+      Heading(),
+      PlayButton(),
+      PlayerCount(),
+      Background()
+    )
   end,
   leave = function()
     lume.each(entities, function(e)

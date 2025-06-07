@@ -334,7 +334,7 @@ local function BottomPanel()
   })
 
   local undoBtn = Button({
-    z = 1,
+    z = 2,
     label = "undo",
     mode = "line",
     color = Color.FireOpal,

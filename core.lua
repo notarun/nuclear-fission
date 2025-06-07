@@ -36,7 +36,7 @@ local function validate(tb)
 end
 
 local function Entity(args)
-  args.z = args.z or 0
+  args.z = args.z or 1
   args.data = args.data or {}
   args.tags = args.tags or {}
   args.data.x, args.data.y = args.data.x or 0, args.data.y or 0
