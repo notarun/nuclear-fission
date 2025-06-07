@@ -81,7 +81,7 @@ local function GameOverModal()
 
   local function load(this)
     rightBtn = Button({
-      z = 2,
+      z = 10,
       label = "replay",
       color = Color.LavenderIndigo,
       onclick = function()
@@ -97,7 +97,7 @@ local function GameOverModal()
     })
 
     leftBtn = Button({
-      z = 2,
+      z = 10,
       label = "home",
       color = Color.FireOpal,
       onclick = function()
@@ -112,7 +112,7 @@ local function GameOverModal()
     })
 
     overlay = core.Entity({
-      z = 1,
+      z = 9,
       load = function(ctx)
         ctx.opacity = 0
         ctx.color = lume.clone(Color.ChineseBlack)
@@ -180,7 +180,7 @@ local function GameOverModal()
 
       lume.push(entities, rightBtn, leftBtn)
 
-      flux.to(overlay.ctx, 0.1, { opacity = 0.5 })
+      flux.to(overlay.ctx, 0.1, { opacity = 0.8 })
 
       flux.to(transition, 0.1, { scale = 1 }):oncomplete(function()
         flux.to(leftBtn.ctx, 0.5, { opacity = 1 })
@@ -194,7 +194,7 @@ local function GameOverModal()
   end
 
   return core.Entity({
-    z = 2,
+    z = 10,
     events = { toggle = toggle },
     tags = { "modal" },
     update = update,
@@ -334,6 +334,7 @@ local function BottomPanel()
   })
 
   local undoBtn = Button({
+    z = 1,
     label = "undo",
     mode = "line",
     color = Color.FireOpal,
