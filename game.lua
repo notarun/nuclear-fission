@@ -77,7 +77,7 @@ local function GameOverModal()
   }
   local vw, vh = lg.getDimensions()
   local transition = { scale = 1 }
-  local leftBtn, rightBtn
+  local leftBtn, rightBtn, winner
 
   local function load(this)
     rightBtn = Button({
@@ -96,7 +96,7 @@ local function GameOverModal()
     })
 
     leftBtn = Button({
-      label = "main menu",
+      label = "home",
       color = Color.FireOpal,
       onclick = function()
         core.goToScene("menu")
@@ -117,7 +117,7 @@ local function GameOverModal()
     ctx.w, ctx.h = vw / 1.2, vh / 3
     ctx.x, ctx.y = (vw - ctx.w) / 2, (vh - ctx.h) / 2
 
-    local winner = state.winner()
+    winner = state.winner()
     if winner then txt.subtitle:set(sf("%s Won", winner.player.label)) end
   end
 
@@ -146,7 +146,7 @@ local function GameOverModal()
     lg.draw(txt.title, (vw - ttw) / 2, ctx.y + tth)
 
     local stw, sth = txt.subtitle:getDimensions()
-    lg.setColor(Color.CookiesAndCream)
+    if winner then lg.setColor(winner.player.color) end
     lg.draw(txt.subtitle, (vw - stw) / 2, ctx.y + (4 * sth))
   end
 

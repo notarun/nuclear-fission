@@ -38,15 +38,17 @@ end
 local function PlayButton()
   return Button({
     label = "pass & play",
-    color = Color.LavenderIndigo,
+    color = Color.FireOpal,
+    txtColor = Color.White,
     onclick = function()
       core.goToScene("game", { players = state.currentPlayerCount() })
     end,
     updatePos = function(ctx, opt)
       local vw, vh = lg.getDimensions()
+
       local _, th = ctx.txt:getDimensions()
 
-      opt.w, opt.h = vw / 1.6, th * 2.4
+      opt.w, opt.h = vw / 2, th * 2.4
       ctx.x, ctx.y = (vw - opt.w) / 2, (vh + opt.h * 2) / 2
     end,
   })
@@ -59,6 +61,7 @@ local function PlayerCount()
   local function load(this)
     local decBtn = Button({
       label = "-",
+      mode = "line",
       color = Color.FireOpal,
       onclick = function()
         local count = state.currentPlayerCount() - 1
@@ -78,6 +81,7 @@ local function PlayerCount()
 
     local incBtn = Button({
       label = "+",
+      mode = "line",
       color = Color.FireOpal,
       onclick = function()
         local count = state.currentPlayerCount() + 1
@@ -102,7 +106,7 @@ local function PlayerCount()
     local vw, vh = lg.getDimensions()
     local tw, th = txt:getDimensions()
 
-    ctx.w, ctx.h = (vw / 1.6), (th * 2.4)
+    ctx.w, ctx.h = (vw / 2), (th * 2.4)
     ctx.x, ctx.y = (vw - ctx.w) / 2, (vh - ctx.h) / 2
     tx, ty = ctx.x + (ctx.w - tw) / 2, ctx.y + (ctx.h - th) / 2
 
