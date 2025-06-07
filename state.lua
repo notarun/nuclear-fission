@@ -10,8 +10,8 @@ local _state = {
   players = {
     { label = "Purple", color = Color.LavenderIndigo, dead = false },
     { label = "Red", color = Color.FireOpal, dead = false },
-    { label = "Blue", color = Color.Turquoise, dead = false },
     { label = "Green", color = Color.Kiwi, dead = false },
+    { label = "Blue", color = Color.Turquoise, dead = false },
   },
   playing = nil,
   playerCount = 2,

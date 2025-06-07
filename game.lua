@@ -320,8 +320,8 @@ local function BottomPanel()
   local homeButton = Button({
     label = "home",
     mode = "line",
-    color = Color.White,
-    txtColor = Color.White,
+    color = Color.CookiesAndCream,
+    txtColor = Color.CookiesAndCream,
     onclick = function()
       if animating then return end
       core.goToScene("menu")
