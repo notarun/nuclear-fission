@@ -20,11 +20,11 @@ out/android: out/$(PKG_NAME).love
 		git clone --recurse-submodules --depth 1 -b 11.5a https://github.com/love2d/love-android out/android; \
 	fi
 	@cp etc/gradle.properties $@/gradle.properties
-	@cp res/icon_72x72.png $@/app/src/main/res/drawable-hdpi/love.png
-	@cp res/icon_96x96.png $@/app/src/main/res/drawable-mdpi/love.png
-	@cp res/icon_96x96.png $@/app/src/main/res/drawable-xhdpi/love.png
-	@cp res/icon_144x144.png $@/app/src/main/res/drawable-xxhdpi/love.png
-	@cp res/icon_192x192.png $@/app/src/main/res/drawable-xxxhdpi/love.png
+	@magick res/icon.png -resize 72x72 $@/app/src/main/res/drawable-hdpi/love.png
+	@magick res/icon.png -resize 48x48 $@/app/src/main/res/drawable-mdpi/love.png
+	@magick res/icon.png -resize 96x96 $@/app/src/main/res/drawable-xhdpi/love.png
+	@magick res/icon.png -resize 144x144 $@/app/src/main/res/drawable-xxhdpi/love.png
+	@magick res/icon.png -resize 192x192 $@/app/src/main/res/drawable-xxxhdpi/love.png
 	@cp $< $@/app/src/embed/assets/game.love
 	@cd $@ && ./gradlew assembleEmbedNoRecord
 
