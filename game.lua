@@ -286,7 +286,7 @@ local function Cell(i, j)
     local mx, my = lm.getPosition()
     local hovering = fn.checkCollision(mx, my, ctx.x, ctx.y, ctx.w, ctx.h)
 
-    if not animating and hovering and input:pressed("click") then
+    if not animating and hovering and input:pressed("mouse1") then
       local owner, playing = state.cell(i, j).owner, state.playing().idx
 
       if owner and owner ~= playing then
@@ -373,7 +373,7 @@ local function BottomPanel()
   return core.Entity({
     load = load,
     update = function()
-      if input:pressed("back") then core.goToScene("menu") end
+      if input:pressed("escape") then core.goToScene("menu") end
     end,
   })
 end
