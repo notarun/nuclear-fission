@@ -29,6 +29,16 @@ out/android: out/$(PKG_NAME).love
 	@cp $< $@/app/src/embed/assets/game.love
 	@cd $@ && ./gradlew assembleEmbedNoRecord
 
+.PHONY: deploy
+deploy: deploy/web
+
+.PHONY: deploy/web
+deploy/web: out/web
+ifndef REMOTE
+	$(error REMOTE variable is not set)
+endif
+	@rsync -r out/web/ $(REMOTE):~/www/g/nf
+
 .PHONY: clean
 clean:
 	@rm -rf out
