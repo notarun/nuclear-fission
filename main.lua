@@ -8,23 +8,25 @@ local core = require("core")
 local input = require("input")
 local res = require("res")
 
+require("menu")
+require("game")
+
 function love.load()
+  input:register()
+
   toast.style.font = res.font.md
   toast.style.backgroundColor = Color.ChineseBlack
   toast.options.animationDuration = 0.1
-
-  require("menu")
-  require("game")
 
   core.goToScene("menu")
 end
 
 function love.update(dt)
   flux.update(dt)
-  input:update()
   toast.update(dt)
   core.scene().update(dt)
-  if input:pressed("debug") then _G.NF_DEBUG = not _G.NF_DEBUG end
+  if input:pressed("d") then _G.NF_DEBUG = not _G.NF_DEBUG end
+  input:update()
 end
 
 function love.draw()

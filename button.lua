@@ -59,7 +59,7 @@ return function(opt)
       local mx, my = lm.getPosition()
       local hovering = fn.checkCollision(mx, my, ctx.x, ctx.y, ctx.w, ctx.h)
 
-      if hovering and input:pressed("click") then
+      if hovering and input:pressed("mouse1") then
         flux
           .to(ctx.animation, ctx.animation.duration, { dty = ctx.h / 24 })
           :oncomplete(opt.onclick)

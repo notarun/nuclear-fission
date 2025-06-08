@@ -1,9 +1,6 @@
 [submodule "3rd/lume"]
 	path = 3rd/lume
 	url = https://github.com/rxi/lume
-[submodule "3rd/baton"]
-	path = 3rd/baton
-	url = https://github.com/tesselode/baton
 [submodule "3rd/bump"]
 	path = 3rd/bump
 	url = https://github.com/kikito/bump.lua
