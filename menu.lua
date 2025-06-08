@@ -128,7 +128,7 @@ end
 
 local function Background()
   local animate
-  local animating = { duration = 10, scale = 1 }
+  local animating = { duration = 5, scale = 1 }
 
   animate = function()
     flux
