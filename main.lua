@@ -1,5 +1,5 @@
 _G.NF_DEBUG = false
-_G.NF_VERSION = love.filesystem.read(".version")
+_G.NF_VERSION = love.filesystem.read("version")
 
 local flux = require("3rd.flux.flux")
 local toast = require("3rd.toasts.lovelyToasts")

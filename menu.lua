@@ -10,10 +10,10 @@ local res = require("res")
 local state = require("state")
 
 local entities = {}
-local lg, le = love.graphics, love.event
+local lg, le, sl = love.graphics, love.event, string.lower
 
 local function Heading()
-  local title, nColor = "nuclear fission", Color.LavenderIndigo
+  local title, nColor = sl(love.window:getTitle()), Color.LavenderIndigo
 
   local txt = lg.newText(res.font.lg, title)
   local nc, nm = nColor, 0.1
