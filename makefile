@@ -7,6 +7,8 @@ LUA_FILES := $(shell find . -name "*.lua" -not -path "./out/*")
 LOVE_ANDROID_VERSION := 11.5a
 LOVE_ANDROID_DIR := out/love-android
 
+-include makefile.inc
+
 #     _
 #  __| |_  ___ _ _ ___ ___
 # / _| ' \/ _ \ '_/ -_|_-<
@@ -55,12 +57,19 @@ out/$(PKG_NAME)-debug.apk: out/$(PKG_NAME).love etc/gradle.properties
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordDebug
 
 out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties
+ifndef KEYSTORE
+	$(error KEYSTORE variable is not set)
+endif
 	@make configure-android-project
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordRelease
-	# FIXME: sign apk
-	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/release/app-embed-noRecord-release-unsigned.apk $@
+	@zipalign -v 4 $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/release/app-embed-noRecord-release-unsigned.apk $@
+	@apksigner sign --ks $(KEYSTORE) $@
+	@apksigner verify --min-sdk-version 24 $@
 
 out/$(PKG_NAME)-release.aab: out/$(PKG_NAME).love etc/gradle.properties
+ifndef KEYSTORE
+	$(error KEYSTORE variable is not set)
+endif
 	@make configure-android-project
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew bundleEmbedNoRecordRelease
 	# FIXME: sign aab
