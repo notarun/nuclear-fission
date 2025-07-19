@@ -18,5 +18,3 @@ make tidy  # Lint and formats code using luacheck and stylua
 
 - [monogram by datagoblin](https://datagoblin.itch.io/monogram)
 - [water drop by deleted_user_2104797](https://freesound.org/s/166320/)
-- [home by google](https://pictogrammers.com/library/mdi/icon/home/)
-- [undo by google](https://pictogrammers.com/library/mdi/icon/undo/)
