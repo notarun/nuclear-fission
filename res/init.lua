@@ -7,6 +7,7 @@ return {
   font = {
     lg = lg.newFont(FONT_MONOGRAM_TTF, 52),
     md = lg.newFont(FONT_MONOGRAM_TTF, 32),
+    sm = lg.newFont(FONT_MONOGRAM_TTF, 22),
   },
   sound = {
     split = la.newSource(SOUND_WATER_DROP_FLAC, "static"),

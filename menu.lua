@@ -167,6 +167,23 @@ local function Background()
   })
 end
 
+local function Version()
+  local txt = lg.newText(res.font.sm, "v" .. _G.NF_VERSION)
+
+  local function update(_, ctx)
+    local vw, vh = lg.getDimensions()
+    ctx.w, ctx.h = txt:getDimensions()
+    ctx.x, ctx.y = (vw - ctx.w) / 2, (vh - (ctx.h * 4))
+  end
+
+  local function draw(ctx)
+    lg.setColor(Color.CookiesAndCream)
+    lg.draw(txt, ctx.x, ctx.y)
+  end
+
+  return core.Entity({ update = update, draw = draw })
+end
+
 local function Escape()
   local function update(_, _)
     if input:pressed("escape") then le.quit(0) end
@@ -182,6 +199,7 @@ return core.Scene({
       entities,
       Escape(),
       Heading(),
+      Version(),
       PlayButton(),
       PlayerCount(),
       Background()
