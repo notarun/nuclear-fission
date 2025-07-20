@@ -52,8 +52,8 @@ out/$(PKG_NAME)-web/love.wasm: out/$(PKG_NAME).love etc/love.css
 
 out/$(PKG_NAME)-debug.apk: out/$(PKG_NAME).love etc/gradle.properties
 	@make configure-android-project
-	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/debug/app-embed-noRecord-debug.apk $@
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordDebug
+	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/debug/app-embed-noRecord-debug.apk $@
 
 out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties
 	@make configure-android-project
@@ -66,8 +66,8 @@ out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties
 
 out/$(PKG_NAME)-release.aab: out/$(PKG_NAME).love etc/gradle.properties
 	@make configure-android-project
-	@make keystore-env
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew bundleEmbedNoRecordRelease
+	@make keystore-env
 	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/bundle/embedNoRecordRelease/app-embed-noRecord-release.aab $@
 	@jarsigner -keystore $(KEYSTORE_PATH) -storepass $(KEYSTORE_PASSWORD) $@ app
 	@jarsigner -verify -certs $@
@@ -81,6 +81,8 @@ out/$(PKG_NAME)-release.aab: out/$(PKG_NAME).love etc/gradle.properties
 
 configure-android-project: $(LOVE_ANDROID_DIR)/.git/index
 	@make $(LOVE_ANDROID_DIR)/gradle.properties
+	@cp etc/gradle.properties $(LOVE_ANDROID_DIR)/gradle.properties
+	@sed -i 's/\(app.version_name=\).*/\1$(VERSION)/' $(LOVE_ANDROID_DIR)/gradle.properties
 	@make resize-icon
 	@cp out/$(PKG_NAME).love $(LOVE_ANDROID_DIR)/app/src/embed/assets/game.love
 
@@ -91,10 +93,6 @@ $(LOVE_ANDROID_DIR)/.git/index:
 		-b $(LOVE_ANDROID_VERSION) \
 		https://github.com/love2d/love-android  \
 		$(LOVE_ANDROID_DIR)
-
-$(LOVE_ANDROID_DIR)/gradle.properties: etc/gradle.properties
-	@cp $< $@
-	@sed -i 's/\(app.version_name=\).*/\1$(VERSION)/' $@
 
 keystore-env:
 ifndef KEYSTORE_PATH
