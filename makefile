@@ -9,19 +9,6 @@ LOVE_ANDROID_DIR := out/love-android
 
 -include makefile.inc
 
-#     _
-#  __| |_  ___ _ _ ___ ___
-# / _| ' \/ _ \ '_/ -_|_-<
-# \__|_||_\___/_| \___/__/
-.PHONY: tidy clean
-
-tidy:
-	@luacheck *.lua
-	@stylua .
-
-clean:
-	@rm -rf out
-
 #       _      _    __
 #  _ __| |__ _| |_ / _|___ _ _ _ __  ___
 # | '_ \ / _` |  _|  _/ _ \ '_| '  \(_-<
@@ -35,6 +22,19 @@ web: out/$(PKG_NAME)-web/love.wasm
 apk-debug: out/$(PKG_NAME)-debug.apk
 apk: out/$(PKG_NAME)-release.apk
 aab: out/$(PKG_NAME)-release.aab
+
+#     _
+#  __| |_  ___ _ _ ___ ___
+# / _| ' \/ _ \ '_/ -_|_-<
+# \__|_||_\___/_| \___/__/
+.PHONY: tidy clean
+
+tidy:
+	@luacheck *.lua
+	@stylua .
+
+clean:
+	@rm -rf out
 
 #  _                     _
 # | |_ __ _ _ _ __ _ ___| |_ ___
@@ -55,10 +55,11 @@ out/$(PKG_NAME)-debug.apk: out/$(PKG_NAME).love etc/gradle.properties
 	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/debug/app-embed-noRecord-debug.apk $@
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordDebug
 
-out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties keystore-env
+out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties
 	@make configure-android-project
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordRelease
 	@make keystore-env
+	@rm -f $@
 	@zipalign -v 4 $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/release/app-embed-noRecord-release-unsigned.apk $@
 	@apksigner sign --ks $(KEYSTORE_PATH) --ks-pass "pass:$(KEYSTORE_PASSWORD)" $@
 	@apksigner verify --min-sdk-version 24 $@

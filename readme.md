@@ -10,7 +10,7 @@ A pass-and-play, grid-based strategy game inspired by the original [Chain Reacti
 git clone --recurse-submodules https://github.com/notarun/nuclear-fission
 cd nuclear-fission
 
-make       # Builds `.love` and `love.js` files in the `out` directory
+make       # Builds `.love`, `web`, `.apk` and `.aab` files in the `out` directory
 make tidy  # Lint and formats code using luacheck and stylua
 ```
 
