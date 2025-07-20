@@ -41,7 +41,6 @@ aab: out/$(PKG_NAME)-release.aab
 # |  _/ _` | '_/ _` / -_)  _(_-<
 #  \__\__,_|_| \__, \___|\__/__/
 #              |___/
-
 out/$(PKG_NAME).love: $(LUA_FILES) $(RES_FILES) version
 	@mkdir -p out/
 	@zip -9 -r $@ . -x "out/*" "etc" ".*" "**/.*"
@@ -56,31 +55,28 @@ out/$(PKG_NAME)-debug.apk: out/$(PKG_NAME).love etc/gradle.properties
 	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/debug/app-embed-noRecord-debug.apk $@
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordDebug
 
-out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties
-ifndef KEYSTORE
-	$(error KEYSTORE variable is not set)
-endif
+out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties keystore-env
 	@make configure-android-project
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordRelease
+	@make keystore-env
 	@zipalign -v 4 $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/release/app-embed-noRecord-release-unsigned.apk $@
-	@apksigner sign --ks $(KEYSTORE) $@
+	@apksigner sign --ks $(KEYSTORE_PATH) --ks-pass "pass:$(KEYSTORE_PASSWORD)" $@
 	@apksigner verify --min-sdk-version 24 $@
 
 out/$(PKG_NAME)-release.aab: out/$(PKG_NAME).love etc/gradle.properties
-ifndef KEYSTORE
-	$(error KEYSTORE variable is not set)
-endif
 	@make configure-android-project
+	@make keystore-env
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew bundleEmbedNoRecordRelease
-	# FIXME: sign aab
 	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/bundle/embedNoRecordRelease/app-embed-noRecord-release.aab $@
+	@jarsigner -keystore $(KEYSTORE_PATH) -storepass $(KEYSTORE_PASSWORD) $@ app
+	@jarsigner -verify -certs $@
 
 #  _        _
 # | |_  ___| |_ __  ___ _ _ ___
 # | ' \/ -_) | '_ \/ -_) '_(_-<
 # |_||_\___|_| .__/\___|_| /__/
 #            |_|
-.PHONY: configure-android-project resize-icon
+.PHONY: configure-android-project resize-icon keystore-env
 
 configure-android-project: $(LOVE_ANDROID_DIR)/.git/index
 	@make $(LOVE_ANDROID_DIR)/gradle.properties
@@ -99,19 +95,17 @@ $(LOVE_ANDROID_DIR)/gradle.properties: etc/gradle.properties
 	@cp $< $@
 	@sed -i 's/\(app.version_name=\).*/\1$(VERSION)/' $@
 
+keystore-env:
+ifndef KEYSTORE_PATH
+	$(error KEYSTORE_PATH variable is not set)
+endif
+ifndef KEYSTORE_PASSWORD
+	$(error KEYSTORE_PASSWORD variable is not set)
+endif
+
 resize-icon: res/icon.png
 	@magick $< -resize 72x72 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-hdpi/love.png
 	@magick $< -resize 48x48 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-mdpi/love.png
 	@magick $< -resize 96x96 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-xhdpi/love.png
 	@magick $< -resize 144x144 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-xxhdpi/love.png
 	@magick $< -resize 192x192 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-xxxhdpi/love.png
-
-# .PHONY: deploy/android
-# deploy/android: out/android
-# ifndef KEYSTORE
-# 	$(error KEYSTORE variable is not set)
-# endif
-# 	@rm -f out/*.apk*
-# 	@zipalign -v 4 out/android/app/build/outputs/apk/embedNoRecord/release/app-embed-noRecord-release-unsigned.apk out/$(PKG_NAME).apk
-# 	@apksigner sign --ks $(KEYSTORE) out/$(PKG_NAME).apk
-# 	@apksigner verify out/$(PKG_NAME).apk
