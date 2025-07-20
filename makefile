@@ -1,68 +1,111 @@
-PKG_NAME = nuclear-fission
+VERSION := $(shell cat version)
+PKG_NAME := nuclear-fission-$(VERSION)
+
+RES_FILES := $(shell find res -type f)
 LUA_FILES := $(shell find . -name "*.lua" -not -path "./out/*")
 
-.PHONY: all
-all: out/$(PKG_NAME).love out/web out/android
+LOVE_ANDROID_VERSION := 11.5a
+LOVE_ANDROID_DIR := out/love-android
 
-out/$(PKG_NAME).love: $(LUA_FILES)
-	@mkdir -p out/
-	@zip -9 -r $@ . -x "out/*" "etc" "art" ".*" "**/.*"
+-include makefile.inc
 
-.PHONY: out/web
-out/web: out/$(PKG_NAME).love
-	@mkdir -p out/web
-	@npx love.js $< $@ --title $(PKG_NAME) -c
-	@cp etc/love.css $@/theme/love.css
+#     _
+#  __| |_  ___ _ _ ___ ___
+# / _| ' \/ _ \ '_/ -_|_-<
+# \__|_||_\___/_| \___/__/
+.PHONY: tidy clean
 
-.PHONY: out/android
-out/android: out/$(PKG_NAME).love
-	@if [ ! -d out/android/.git ]; then \
-		git clone --recurse-submodules --depth 1 -b 11.5a https://github.com/love2d/love-android out/android; \
-	fi
-	@cp etc/gradle.properties $@/gradle.properties
-	@magick res/icon.png -resize 72x72 $@/app/src/main/res/drawable-hdpi/love.png
-	@magick res/icon.png -resize 48x48 $@/app/src/main/res/drawable-mdpi/love.png
-	@magick res/icon.png -resize 96x96 $@/app/src/main/res/drawable-xhdpi/love.png
-	@magick res/icon.png -resize 144x144 $@/app/src/main/res/drawable-xxhdpi/love.png
-	@magick res/icon.png -resize 192x192 $@/app/src/main/res/drawable-xxxhdpi/love.png
-	@cp $< $@/app/src/embed/assets/game.love
-	@cd $@ && ./gradlew assembleEmbedNoRecord
+tidy:
+	@luacheck *.lua
+	@stylua .
 
-.PHONY: deploy
-deploy: deploy/web deploy/android
-
-.PHONY: deploy/web
-deploy/web: out/web
-ifndef REMOTE
-	$(error REMOTE variable is not set)
-endif
-	@rsync -r out/web/ $(REMOTE):~/www/g/nf
-
-.PHONY: deploy/android
-deploy/android: out/android
-ifndef KEYSTORE
-	$(error KEYSTORE variable is not set)
-endif
-	@rm -f out/*.apk*
-	@zipalign -v 4 out/android/app/build/outputs/apk/embedNoRecord/release/app-embed-noRecord-release-unsigned.apk out/$(PKG_NAME).apk
-	@apksigner sign --ks $(KEYSTORE) out/$(PKG_NAME).apk
-	@apksigner verify out/$(PKG_NAME).apk
-
-.PHONY: clean
 clean:
 	@rm -rf out
 
-.PHONY: dev
-dev:
-	@love .
+#       _      _    __
+#  _ __| |__ _| |_ / _|___ _ _ _ __  ___
+# | '_ \ / _` |  _|  _/ _ \ '_| '  \(_-<
+# | .__/_\__,_|\__|_| \___/_| |_|_|_/__/
+# |_|
+.PHONY: zip web apk apk-debug apk aab
 
-.PHONY: lint
-lint:
-	@luacheck *.lua
+all: zip web apk-debug apk aab
+zip: out/$(PKG_NAME).love
+web: out/$(PKG_NAME)-web/love.wasm
+apk-debug: out/$(PKG_NAME)-debug.apk
+apk: out/$(PKG_NAME)-release.apk
+aab: out/$(PKG_NAME)-release.aab
 
-.PHONY: fmt
-fmt:
-	@stylua .
+#  _                     _
+# | |_ __ _ _ _ __ _ ___| |_ ___
+# |  _/ _` | '_/ _` / -_)  _(_-<
+#  \__\__,_|_| \__, \___|\__/__/
+#              |___/
+out/$(PKG_NAME).love: $(LUA_FILES) $(RES_FILES) version
+	@mkdir -p out/
+	@zip -9 -r $@ . -x "out/*" "etc" ".*" "**/.*"
 
-.PHONY: tidy
-tidy: lint fmt
+out/$(PKG_NAME)-web/love.wasm: out/$(PKG_NAME).love etc/love.css
+	@mkdir -p out/$(PKG_NAME)-web
+	@npx love.js $< out/$(PKG_NAME)-web --title $(PKG_NAME) -c
+	@cp etc/love.css out/$(PKG_NAME)-web/theme/love.css
+
+out/$(PKG_NAME)-debug.apk: out/$(PKG_NAME).love etc/gradle.properties
+	@make configure-android-project
+	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/debug/app-embed-noRecord-debug.apk $@
+	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordDebug
+
+out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties keystore-env
+	@make configure-android-project
+	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordRelease
+	@make keystore-env
+	@zipalign -v 4 $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/release/app-embed-noRecord-release-unsigned.apk $@
+	@apksigner sign --ks $(KEYSTORE_PATH) --ks-pass "pass:$(KEYSTORE_PASSWORD)" $@
+	@apksigner verify --min-sdk-version 24 $@
+
+out/$(PKG_NAME)-release.aab: out/$(PKG_NAME).love etc/gradle.properties
+	@make configure-android-project
+	@make keystore-env
+	@cd $(LOVE_ANDROID_DIR) && ./gradlew bundleEmbedNoRecordRelease
+	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/bundle/embedNoRecordRelease/app-embed-noRecord-release.aab $@
+	@jarsigner -keystore $(KEYSTORE_PATH) -storepass $(KEYSTORE_PASSWORD) $@ app
+	@jarsigner -verify -certs $@
+
+#  _        _
+# | |_  ___| |_ __  ___ _ _ ___
+# | ' \/ -_) | '_ \/ -_) '_(_-<
+# |_||_\___|_| .__/\___|_| /__/
+#            |_|
+.PHONY: configure-android-project resize-icon keystore-env
+
+configure-android-project: $(LOVE_ANDROID_DIR)/.git/index
+	@make $(LOVE_ANDROID_DIR)/gradle.properties
+	@make resize-icon
+	@cp out/$(PKG_NAME).love $(LOVE_ANDROID_DIR)/app/src/embed/assets/game.love
+
+$(LOVE_ANDROID_DIR)/.git/index:
+	@git clone \
+		--recurse-submodules \
+		--depth 1 \
+		-b $(LOVE_ANDROID_VERSION) \
+		https://github.com/love2d/love-android  \
+		$(LOVE_ANDROID_DIR)
+
+$(LOVE_ANDROID_DIR)/gradle.properties: etc/gradle.properties
+	@cp $< $@
+	@sed -i 's/\(app.version_name=\).*/\1$(VERSION)/' $@
+
+keystore-env:
+ifndef KEYSTORE_PATH
+	$(error KEYSTORE_PATH variable is not set)
+endif
+ifndef KEYSTORE_PASSWORD
+	$(error KEYSTORE_PASSWORD variable is not set)
+endif
+
+resize-icon: res/icon.png
+	@magick $< -resize 72x72 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-hdpi/love.png
+	@magick $< -resize 48x48 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-mdpi/love.png
+	@magick $< -resize 96x96 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-xhdpi/love.png
+	@magick $< -resize 144x144 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-xxhdpi/love.png
+	@magick $< -resize 192x192 $(LOVE_ANDROID_DIR)/app/src/main/res/drawable-xxxhdpi/love.png
