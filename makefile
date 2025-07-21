@@ -69,10 +69,11 @@ out/$(PKG_NAME).love: $(LUA_FILES) $(RES_FILES) version
 	@mkdir -p out/
 	@zip -9 -r $@ . -x "out/*" "etc" ".*" "**/.*"
 
-out/$(PKG_NAME)-web/love.wasm: out/$(PKG_NAME).love etc/love.css
+out/$(PKG_NAME)-web/love.wasm: out/$(PKG_NAME).love etc/love.css etc/privacy.html
 	@mkdir -p out/$(PKG_NAME)-web
 	@npx love.js $< out/$(PKG_NAME)-web --title $(PKG_NAME) -c
 	@cp etc/love.css out/$(PKG_NAME)-web/theme/love.css
+	@cp etc/privacy.html out/$(PKG_NAME)-web/privacy.html
 
 out/$(PKG_NAME)-debug.apk: out/$(PKG_NAME).love etc/gradle.properties
 	@make configure-android-project
