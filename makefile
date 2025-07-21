@@ -83,6 +83,7 @@ configure-android-project: $(LOVE_ANDROID_DIR)/.git/index
 	@cp etc/AndroidManifest.xml $(LOVE_ANDROID_DIR)/app/src/main/AndroidManifest.xml
 	@cp etc/gradle.properties $(LOVE_ANDROID_DIR)/gradle.properties
 	@sed -i 's/\(app.version_name=\).*/\1$(VERSION)/' $(LOVE_ANDROID_DIR)/gradle.properties
+	@sed -i 's/\(app.version_code=\).*/\1$(shell echo $(VERSION) | sed 's/\.//g')/' $(LOVE_ANDROID_DIR)/gradle.properties
 	@make resize-icon
 	@cp out/$(PKG_NAME).love $(LOVE_ANDROID_DIR)/app/src/embed/assets/game.love
 
