@@ -80,7 +80,7 @@ out/$(PKG_NAME)-release.aab: out/$(PKG_NAME).love etc/gradle.properties
 .PHONY: configure-android-project resize-icon keystore-env
 
 configure-android-project: $(LOVE_ANDROID_DIR)/.git/index
-	@make $(LOVE_ANDROID_DIR)/gradle.properties
+	@cp etc/AndroidManifest.xml $(LOVE_ANDROID_DIR)/app/src/main/AndroidManifest.xml
 	@cp etc/gradle.properties $(LOVE_ANDROID_DIR)/gradle.properties
 	@sed -i 's/\(app.version_name=\).*/\1$(VERSION)/' $(LOVE_ANDROID_DIR)/gradle.properties
 	@make resize-icon
