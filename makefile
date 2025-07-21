@@ -7,6 +7,11 @@ LUA_FILES := $(shell find . -name "*.lua" -not -path "./out/*")
 LOVE_ANDROID_VERSION := 11.5a
 LOVE_ANDROID_DIR := out/love-android
 
+GIT_HASH = $(shell git rev-parse HEAD)
+GIT_USER = $(shell git config user.name)
+GIT_EMAIL = $(shell git config user.email)
+GIT_REPO = $(shell git config remote.origin.url)
+
 -include makefile.inc
 
 #       _      _    __
@@ -22,6 +27,25 @@ web: out/$(PKG_NAME)-web/love.wasm
 apk-debug: out/$(PKG_NAME)-debug.apk
 apk: out/$(PKG_NAME)-release.apk
 aab: out/$(PKG_NAME)-release.aab
+
+#     _          _
+#  __| |___ _ __| |___ _  _
+# / _` / -_) '_ \ / _ \ || |
+# \__,_\___| .__/_\___/\_, |
+#          |_|         |__/
+gh-pages:
+	@echo "Deploying: $(GIT_HASH)"
+	@rm -rf out/$(PKG_NAME)-web
+	@make web
+	@echo "nf.nullvoid.art" > out/$(PKG_NAME)-web/CNAME
+	@cd out/$(PKG_NAME)-web \
+		&& git init \
+		&& git config user.name "$(GIT_USER)" \
+		&& git config user.email "$(GIT_EMAIL)" \
+		&& git add -A \
+		&& git commit -m "Deploy to gh-pages @ $(GIT_HASH)" \
+		&& git remote add origin $(GIT_REPO) \
+		&& git push --force origin master:gh-pages
 
 #     _
 #  __| |_  ___ _ _ ___ ___
