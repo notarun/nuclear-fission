@@ -75,12 +75,12 @@ out/$(PKG_NAME)-web/love.wasm: out/$(PKG_NAME).love etc/love.css etc/privacy.htm
 	@cp etc/love.css out/$(PKG_NAME)-web/theme/love.css
 	@cp etc/privacy.html out/$(PKG_NAME)-web/privacy.html
 
-out/$(PKG_NAME)-debug.apk: out/$(PKG_NAME).love etc/gradle.properties
+out/$(PKG_NAME)-debug.apk: out/$(PKG_NAME).love etc/gradle.properties etc/AndroidManifest.xml
 	@make configure-android-project
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordDebug
 	@cp $(LOVE_ANDROID_DIR)/app/build/outputs/apk/embedNoRecord/debug/app-embed-noRecord-debug.apk $@
 
-out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties
+out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties etc/AndroidManifest.xml
 	@make configure-android-project
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew assembleEmbedNoRecordRelease
 	@make keystore-env
@@ -89,7 +89,7 @@ out/$(PKG_NAME)-release.apk: out/$(PKG_NAME).love etc/gradle.properties
 	@apksigner sign --ks $(KEYSTORE_PATH) --ks-pass "pass:$(KEYSTORE_PASSWORD)" $@
 	@apksigner verify --min-sdk-version 24 $@
 
-out/$(PKG_NAME)-release.aab: out/$(PKG_NAME).love etc/gradle.properties
+out/$(PKG_NAME)-release.aab: out/$(PKG_NAME).love etc/gradle.properties etc/AndroidManifest.xml
 	@make configure-android-project
 	@cd $(LOVE_ANDROID_DIR) && ./gradlew bundleEmbedNoRecordRelease
 	@make keystore-env
